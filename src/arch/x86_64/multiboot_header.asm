@@ -1,3 +1,8 @@
+; multiboot_header.asm
+
+; required data for recognition via bootloader
+; mainly magic numbers and necessary data, to enable multiboot support
+
 section .mboot_h
 header_start:
   ; definitions
