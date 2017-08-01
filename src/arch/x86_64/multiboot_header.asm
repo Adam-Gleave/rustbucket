@@ -13,8 +13,6 @@ header_start:
   ; checksum (avoid compiler warning)
   dd 0x100000000 - (0xe85250d6 + 0 + (header_end - header_start))
 
-  ; insert multiboot tags (optional)
-
   ; required multiboot end tags
   dw 0                            ; type
   dw 0                            ; flags

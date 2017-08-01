@@ -7,7 +7,7 @@ SECTIONS {
   .boot :
   {
     /* load multiboot header first */
-    *(.mboot_h)
+    KEEP(*(.mboot_h))
   }
 
   .text :
