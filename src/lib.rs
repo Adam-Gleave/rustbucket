@@ -5,13 +5,16 @@
 
 #![no_std]  //prevent linking of rust std library
 #![feature(lang_items)]
+#![feature(slice_get_slice)]
 
 mod vga;
 
 // main kernel function
 #[no_mangle] //disbale name mangling (func can be accessed from asm files)
 pub extern fn kernel_main() {
+    vga::clear_term();
     vga::hello_world();
+    loop {}
 }
 
 // called on system panic -- not implemented yet
