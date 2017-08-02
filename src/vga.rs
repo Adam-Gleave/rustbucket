@@ -45,6 +45,7 @@ pub fn print_char(c : char, color : u8) {
 pub fn print_line(str : &str, color : u8) {
 	for c in str.chars() {
         print_char(c, color);
+    }
 }
 
 pub fn clear_term() {
@@ -52,8 +53,8 @@ pub fn clear_term() {
     let mut buffer = 0xb8000 as *mut _;
 
     //loop through columns and rows, print whitespace char
-    for x in 0..COLUMNS as u8 {
-        for y in 0..ROWS as u8 {
+    for x in 0..VGA_W as u8 {
+        for y in 0..VGA_H as u8 {
             unsafe {
                 //shift buffer forward 2 bytes each loop
                 buffer = (buffer as u32 + 2) as *mut _;
