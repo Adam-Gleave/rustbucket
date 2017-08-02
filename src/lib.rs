@@ -6,23 +6,12 @@
 #![no_std]  //prevent linking of rust std library
 #![feature(lang_items)]
 
+mod vga;
+
 // main kernel function
 #[no_mangle] //disbale name mangling (func can be accessed from asm files)
 pub extern fn kernel_main() {
-    let string = b"Hello, World!"; //make a byte array from a string
-    let color = 0x1f; //specify colour (blue bg, white fg)
-    let mut array = [color; 26];
-
-    //iterate through the string byte array
-    //place character in an index (left-most 2 bytes of each 32-bit VGA code)
-    for (i, character) in string.into_iter().enumerate() {
-        array[i*2] = *character;
-    }
-
-    let buffer = 0xb8000 as *mut _; //create a pointer to the VGA buffer location
-    unsafe { *buffer = array } //dereference pointer and assign array to location
-
-    loop {}
+    vga::hello_world();
 }
 
 // called on system panic -- not implemented yet
