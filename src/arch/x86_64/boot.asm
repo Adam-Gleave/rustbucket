@@ -5,6 +5,7 @@
 
 ; define constants
 global start          ; global access to kernel entry
+extern long_mode_start
 
 section .text
 bits 32               ; 32 bit instructions (CPU in protected mode)
@@ -17,19 +18,21 @@ start:
   call check_cpuid      ; throw code 1
   call check_long_mode  ; throw code 2
 
+  ; enable paging
+  call set_up_paging
+  call set_paging
+
+  ; load gdt
+  lgdt [gdt64.pointer]
+  jmp gdt64.code:long_mode_start
+
   extern kernel_main
   call kernel_main ; start kernel
 
   ; print 'OK'
   mov dword [0xb8000], 0x2f4b2f4f ; if this executes, kernel_main() is successful
 
-  ; system has nothing left to perform:
-  ; place system into an infinite loop
-  cli        ; clear interrupt flag
-
-back:
-  hlt        ; wait for interrupt
-  jmp back     ; jump to hlt if system wakes up
+  hlt
 
 ; check for multiboot loader
 check_multiboot:
@@ -99,8 +102,95 @@ error:
   mov byte  [0xb800a], al
   hlt
 
-; stack structure
+; set up paging table references in the cpu
+set_up_paging:
+  mov eax, p3_table
+  or eax, 0b11 ; present + writable flags set
+  mov [p4_table], eax
+
+  mov eax, p2_table
+  or eax, 0b11
+  mov [p3_table], eax
+
+  mov ecx, 0
+
+.map_p2_table:
+  ; map P2 entry to a 2MiB huge page
+  mov eax, 0x200000  ; 2MiB
+  mul ecx            ; start address of nth entry (n stored in ecx)
+  or eax, 0b10000011 ; present + writable + huge
+  mov [p2_table + ecx * 8], eax ; map nth entry
+
+  inc ecx            ; increase counter
+  cmp ecx, 512       ; if counter == 512, the whole P2 table is mapped
+  jne .map_p2_table  ; else map the next entry
+
+  ret
+
+; enable paging in the cpu
+set_paging:
+  ; load p4 table to cr3 register
+  ; cpu uses cr3 register to reference p4 tables
+  mov eax, p4_table
+  mov cr3, eax
+
+  ; set Physical Address Extension (PAE) flag in
+  mov eax, cr4
+  or eax, 1 << 5
+  mov cr4, eax
+
+  ; set long mode bit in MSR
+  mov ecx, 0xC0000080
+  rdmsr
+  or eax, 1 << 8
+  wrmsr
+
+  ; enable paging in cr0 register
+  mov eax, cr0
+  or eax, 1 << 31
+  mov cr0, eax
+
+  ret
+
+; stack structure and paging
 section .bss
+align 4096
+p4_table:
+  resb 4096
+p3_table:
+  resb 4096
+p2_table:
+  resb 4096
 stack_bottom:
-  resb 16384             ; reserve 16 KB of stack space for kernel
+  resb 16384    ; reserve 16 KB of stack space for kernel
 stack_top:
+
+; set up a gdt table (64-bit)
+section .read_only:
+gdt64:
+    dq 0 ; zero entry
+.code: equ $ - gdt64 ; store gdt offset
+    ; executable, descriptor type, present, 64-bit
+    dq (1<<43) | (1<<44) | (1<<47) | (1<<53) ; code segment flags
+; create a pointer to the table
+.pointer:
+    dw $ - gdt64 -1 ; size of table
+    dq gdt64 ; address of table
+
+; required data for recognition via bootloader
+; mainly magic numbers and necessary data, to enable multiboot support
+section .mboot_h
+header_start:
+  ; definitions
+  dd 0xe85250d6                   ; multiboot 2 number
+  dd 0                            ; architecture specification: 0 (x86)
+  dd header_end - header_start    ; length of header
+
+  ; checksum (avoid compiler warning)
+  dd 0x100000000 - (0xe85250d6 + 0 + (header_end - header_start))
+
+  ; required multiboot end tags
+  dw 0                            ; type
+  dw 0                            ; flags
+  dw 8                            ; size
+header_end:
