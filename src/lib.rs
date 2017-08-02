@@ -11,7 +11,9 @@ mod vga;
 // main kernel function
 #[no_mangle] //disbale name mangling (func can be accessed from asm files)
 pub extern fn kernel_main() {
-    vga::hello_world();
+    vga::print_line("Welcome to the kernel!", 0x1F);
+
+	loop {}
 }
 
 // called on system panic -- not implemented yet
