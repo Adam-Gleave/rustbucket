@@ -26,12 +26,6 @@ start:
   lgdt [gdt64.pointer]
   jmp gdt64.code:long_mode_start
 
-  extern kernel_main
-  call kernel_main ; start kernel
-
-  ; print 'OK'
-  mov dword [0xb8000], 0x2f4b2f4f ; if this executes, kernel_main() is successful
-
   hlt
 
 ; check for multiboot loader
