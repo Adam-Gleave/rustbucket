@@ -13,8 +13,8 @@ mod vga;
 #[no_mangle] //disbale name mangling (func can be accessed from asm files)
 pub extern fn kernel_main() {
 	vga::clear_term();
-
-    vga::println("Welcome to the Rustbucket kernel.");
+  
+  vga::println("Welcome to the Rustbucket kernel.");
 	vga::println("Starting boot procedure...");
 
 	// TODO

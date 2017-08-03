@@ -45,7 +45,7 @@ pub fn print_char(c : char, color : u8) {
 pub fn print(str : &str, color : u8) {
 	for c in str.chars() {
         print_char(c, color);
-	}
+  }
 }
 
 pub fn println(str : &str) {
@@ -57,9 +57,9 @@ pub fn clear_term() {
     //loop through columns and rows, print whitespace char
     for x in 0..VGA_W as u32 {
         for y in 0..VGA_H as u32 {
-			let offset : usize = ((y * VGA_W + x) * 2) as usize;
-			let data : i16 = 0x1F20;
-			unsafe { *((VGA_BUFF + offset) as *mut i16) = data; }
+          let offset : usize = ((y * VGA_W + x) * 2) as usize;
+          let data : i16 = 0x1F20;
+          unsafe { *((VGA_BUFF + offset) as *mut i16) = data; }
         }
     }
 }
