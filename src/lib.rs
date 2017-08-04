@@ -8,6 +8,8 @@
 #![feature(lang_items)]
 #![feature(repr_packed)] //allow structs to be packed in memory
 #![feature(asm)] //allow inline assembly
+#![feature(repr_align)]
+#![feature(attr_literals)]
 
 mod vga;
 mod arch;
@@ -19,11 +21,11 @@ pub extern fn kernel_main() {
 
   	vga::println("Welcome to the Rustbucket kernel.");
 	vga::println("Starting boot procedure...");
-	// arch::x86_64::gdt::gdt_init(); //BROKEN FUNCTION
+	arch::x86_64::gdt::gdt_init();
+	vga::println("\nSuccess! Created 64-bit GDT.");
 
 	// TODO
 	// ----
-	// - Create GDT
 	// - Create IDT
 	// - Add exception & hardware interrupt handlers to IDT
 	// - Allocate space for thread stacks

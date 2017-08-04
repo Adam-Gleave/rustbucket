@@ -4,7 +4,7 @@ global gdt_install
 bits 64
 
 gdt_install:
-  mov rax, [esp+4]  ; get the pointer to the gdt  passed as parameter in Rust code
+  mov rax, [rsp + 8]  ; get the pointer to the gdt  passed as parameter in Rust code
   lgdt [rax]        ; load the gdt pointer into cpu
 
   mov ax, 0x10      ; 0x10 is the offset in the gdt to our data segment

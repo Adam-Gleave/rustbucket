@@ -8,8 +8,9 @@ use core::mem::size_of;
 const GDT_LENGTH: usize = 3;
 
 //contains the structure of a gdt entry
+#[derive(Copy, Clone, Debug)]
 #[repr(packed)]
-struct GdtEntry {
+pub struct GdtEntry {
     //limit: size of entry
     limit_low: u16,
     //base: offset in memory of entry
@@ -43,13 +44,48 @@ enum GranularityFlags {
 //contains the pointer to the gdt that must be passed to assembly
 //will be aligned to the largest item in the struct (4 bytes), as per Rust implementation
 #[repr(packed)]
-struct GdtPointer {
-    limit: u16,
-    base: u32
+pub struct GdtPointer {
+    pub limit: u16,
+    pub base: u64
 }
 
+//set a static variable containing the GDT pointer
+//we use a static variable, since we can find its location in memory with "VAR".as_ptr()
+pub static mut GDT_POINTER: GdtPointer = GdtPointer {
+        limit: 0,
+        base: 0
+};
+
+//set a static variable containing the GDT
+//we use a static variable, since we can find its location in memory with "VAR".as_ptr()
+pub static mut GDT: [GdtEntry; 3] = [
+    //initialise with null entries, since Rust does not support forward declaration
+    GdtEntry {
+        base_low: 0,
+        base_middle: 0,
+        base_high: 0,
+        limit_low: 0,
+        granularity: 0,
+        access: 0
+    }, GdtEntry {
+        base_low: 0,
+        base_middle: 0,
+        base_high: 0,
+        limit_low: 0,
+        granularity: 0,
+        access: 0
+    }, GdtEntry {
+        base_low: 0,
+        base_middle: 0,
+        base_high: 0,
+        limit_low: 0,
+        granularity: 0,
+        access: 0
+    }
+];
+
 impl GdtEntry {
-    pub fn new(base_in: u32, limit_in: u32, access_in: u8, gran_in: u8) -> GdtEntry {
+    pub fn set_up(base_in: u32, limit_in: u32, access_in: u8, gran_in: u8) -> GdtEntry {
         let temp_flags: u8 = ((limit_in >> 16) & 0x0F) as u8;
         let flags: u8 = temp_flags | ((gran_in << 4) &0x0F) as u8;
 
@@ -69,19 +105,7 @@ impl GdtEntry {
     }
 }
 
-impl GdtPointer {
-    pub fn new(base_in: *const GdtEntry) -> GdtPointer {
-        GdtPointer {
-            limit: (size_of::<GdtEntry>() * 3 - 1) as u16,
-            base: base_in as u32,
-        }
-    }
-}
-
 pub fn gdt_init() {
-    //set null entry
-    let null_entry = GdtEntry::new(0, 0, 0, 0);
-
     //set access flags for code segments
     let code_flags: u8 =
         AccessFlags::ReadWrite as u8 |
@@ -98,15 +122,23 @@ pub fn gdt_init() {
         GranularityFlags::Page as u8 |
         GranularityFlags::LongMode_64 as u8;
 
-    //set code segment entry
-    let code_entry = GdtEntry::new(0, 0xFFFF, code_flags, granularity_flags);
-    let data_entry = GdtEntry::new(0, 0xFFFF, data_flags, granularity_flags);
+    //set up gdt entries
+    unsafe {
+        GDT[0] = GdtEntry::set_up(0, 0, 0, 0);
+        GDT[1] = GdtEntry::set_up(0, 0xFFFFF, code_flags, granularity_flags);
+        GDT[2] = GdtEntry::set_up(0, 0xFFFFF, data_flags, granularity_flags);
+    }
 
-    //set up gdt
-    let gdt: [GdtEntry; GDT_LENGTH] = [null_entry, code_entry, data_entry];
-    let gdt_ptr = GdtPointer::new(gdt[0].limit_low as *const _); //pointer to first byte in table
+    //set up gdt pointer structure
+    unsafe {
+        GDT_POINTER.limit = (GDT_LENGTH as u16 * size_of::<GdtEntry>() as u16) - 1;
+        GDT_POINTER.base = GDT.as_ptr() as u64;
+    }
 
     //set gdt to cpu
-    extern { fn gdt_install(gdt: *const u32); }
-    unsafe { gdt_install(gdt_ptr.limit as *const u32); }
+    unsafe { gdt_install(&GDT_POINTER); }
+}
+
+unsafe fn gdt_install(gdt: &GdtPointer) {
+    asm!("lgdt ($0)" :: "r" (gdt) : "memory");
 }
