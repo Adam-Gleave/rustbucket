@@ -4,9 +4,10 @@
 // main kernel operation is here
 
 #![no_std]  //prevent linking of rust std library
+#![allow(dead_code)] //allow unused code in the compiler
 #![feature(lang_items)]
-#![feature(slice_get_slice)]
-#![feature(repr_packed)]
+#![feature(repr_packed)] //allow structs to be packed in memory
+#![feature(asm)] //allow inline assembly
 
 mod vga;
 mod arch;
@@ -16,8 +17,9 @@ mod arch;
 pub extern fn kernel_main() {
 	vga::clear_term();
 
-  vga::println("Welcome to the Rustbucket kernel.");
+  	vga::println("Welcome to the Rustbucket kernel.");
 	vga::println("Starting boot procedure...");
+	// arch::x86_64::gdt::gdt_init(); //BROKEN FUNCTION
 
 	// TODO
 	// ----
