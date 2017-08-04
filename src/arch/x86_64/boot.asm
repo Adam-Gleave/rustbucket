@@ -160,6 +160,7 @@ stack_bottom:
 stack_top:
 
 ; set up a gdt table (64-bit)
+; this is a temporary table, before we jump to kernel
 section .read_only:
 gdt64:
     dq 0 ; zero entry

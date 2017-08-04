@@ -11,18 +11,19 @@
 #![feature(repr_align)]
 #![feature(attr_literals)]
 
-mod vga;
+mod driver;
 mod arch;
 
 // main kernel function
 #[no_mangle] //disbale name mangling (func can be accessed from asm files)
 pub extern fn kernel_main() {
-	vga::clear_term();
+	driver::vga::clear_term();
 
-  	vga::println("Welcome to the Rustbucket kernel.");
-	vga::println("Starting boot procedure...");
+  	driver::vga::println("Welcome to the Rustbucket kernel.");
+	driver::vga::println("Starting boot procedure...");
+
 	arch::x86_64::gdt::gdt_init();
-	vga::println("\nSuccess! Created 64-bit GDT.");
+	driver::vga::println("\nSuccess! Created 64-bit GDT.");
 
 	// TODO
 	// ----
