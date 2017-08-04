@@ -6,14 +6,16 @@
 #![no_std]  //prevent linking of rust std library
 #![feature(lang_items)]
 #![feature(slice_get_slice)]
+#![feature(repr_packed)]
 
 mod vga;
+mod arch;
 
 // main kernel function
 #[no_mangle] //disbale name mangling (func can be accessed from asm files)
 pub extern fn kernel_main() {
 	vga::clear_term();
-  
+
   vga::println("Welcome to the Rustbucket kernel.");
 	vga::println("Starting boot procedure...");
 
