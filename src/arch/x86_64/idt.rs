@@ -69,3 +69,19 @@ impl IdtEntry {
         }
     }
 }
+
+pub fn idt_init() {
+
+    //set up idt pointer structure
+    unsafe {
+        IDT_POINTER.limit = (IDT_LENGTH as u16 * size_of::<IdtEntry>() as u16) - 1;
+        IDT_POINTER.base = IDT.as_ptr() as u64;
+    }
+
+    //set idt to cpu
+    unsafe { idt_install(&IDT_POINTER) }
+}
+
+unsafe fn idt_install(idt: &IdtPointer) {
+    asm!("lidt ($0)" :: "r" (idt) : "memory");
+}

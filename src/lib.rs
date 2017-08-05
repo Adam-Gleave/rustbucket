@@ -25,6 +25,8 @@ pub extern fn kernel_main() {
 
 	arch::x86_64::gdt::gdt_init();
 	driver::vga::println("\nSuccess! Created 64-bit GDT.");
+	arch::x86_64::idt::idt_init();
+	driver::vga::println("Success! Created 64-bit IDT.");
 
 	// TODO
 	// ----
