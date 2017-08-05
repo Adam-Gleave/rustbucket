@@ -10,6 +10,7 @@
 #![feature(asm)] //allow inline assembly
 #![feature(repr_align)]
 #![feature(attr_literals)]
+#![feature(const_fn)]
 
 mod driver;
 mod arch;

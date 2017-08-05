@@ -42,7 +42,6 @@ enum GranularityFlags {
 }
 
 //contains the pointer to the gdt that must be passed to assembly
-//will be aligned to the largest item in the struct (4 bytes), as per Rust implementation
 #[repr(packed)]
 pub struct GdtPointer {
     pub limit: u16,
@@ -58,33 +57,21 @@ pub static mut GDT_POINTER: GdtPointer = GdtPointer {
 
 //set a static variable containing the GDT
 //we use a static variable, since we can find its location in memory with "VAR".as_ptr()
-pub static mut GDT: [GdtEntry; 3] = [
-    //initialise with null entries, since Rust does not support forward declaration
-    GdtEntry {
-        base_low: 0,
-        base_middle: 0,
-        base_high: 0,
-        limit_low: 0,
-        granularity: 0,
-        access: 0
-    }, GdtEntry {
-        base_low: 0,
-        base_middle: 0,
-        base_high: 0,
-        limit_low: 0,
-        granularity: 0,
-        access: 0
-    }, GdtEntry {
-        base_low: 0,
-        base_middle: 0,
-        base_high: 0,
-        limit_low: 0,
-        granularity: 0,
-        access: 0
-    }
-];
+static mut GDT: [GdtEntry; 3] = [GdtEntry::new(); 3];
 
 impl GdtEntry {
+    //constructor, since Rust does not support forward declaration
+    pub const fn new() -> GdtEntry {
+        GdtEntry {
+            base_low: 0,
+            base_middle: 0,
+            base_high: 0,
+            limit_low: 0,
+            granularity: 0,
+            access: 0
+        }
+    }
+
     pub fn set_up(base_in: u32, limit_in: u32, access_in: u8, gran_in: u8) -> GdtEntry {
         let temp_flags: u8 = ((limit_in >> 16) & 0x0F) as u8;
         let flags: u8 = temp_flags | ((gran_in << 4) &0x0F) as u8;
