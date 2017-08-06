@@ -19,6 +19,7 @@ use driver::vga::println;
 use driver::vga::clear_term;
 use arch::x86_64::gdt::gdt_init;
 use arch::x86_64::idt::idt_init;
+use arch::pic::pic_init;
 
 // main kernel function
 #[no_mangle] //disbale name mangling (func can be accessed from asm files)
@@ -28,15 +29,13 @@ pub extern fn kernel_main() {
   	println("Welcome to the Rustbucket kernel.");
 	println("Starting boot procedure...");
 
-	gdt_init();
-	println("\nSuccess! Created 64-bit GDT.");
-
-	idt_init();
-	println("Success! Created 64-bit IDT.");
+	//initialise system
+	gdt_init(); //set up GDT (global descriptor table)
+	idt_init(); //set up IDT (interrupt descriptor table)
+	pic_init(); //set up PIC (programmable interrupt controller)
 
 	// TODO
 	// ----
-	// - Create IDT
 	// - Add exception & hardware interrupt handlers to IDT
 	// - Allocate space for thread stacks
 	// - Enable PIT (or similar interrupt-driven timer) to preempt threads

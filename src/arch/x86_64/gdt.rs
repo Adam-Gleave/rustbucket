@@ -4,6 +4,7 @@
 //a table has already been defined for protected mode, in boot.asm
 
 use core::mem::size_of;
+use driver::vga::println;
 
 const GDT_LENGTH: usize = 3;
 
@@ -124,6 +125,9 @@ pub fn gdt_init() {
 
     //set gdt to cpu
     unsafe { gdt_install(&GDT_POINTER); }
+
+    //confirm success via VGA
+	println("\nSuccess! Created 64-bit GDT.");
 }
 
 unsafe fn gdt_install(gdt: &GdtPointer) {
