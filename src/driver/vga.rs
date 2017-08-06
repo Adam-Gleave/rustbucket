@@ -49,8 +49,8 @@ pub fn print(str : &str, color : u8) {
 }
 
 pub fn println(str : &str) {
-	print(str, 0x1F);
-	print_char('\n', 0x1F);
+	print(str, 0x0F);
+	print_char('\n', 0x0F);
 }
 
 pub fn clear_term() {
@@ -58,7 +58,7 @@ pub fn clear_term() {
     for x in 0..VGA_W as u32 {
         for y in 0..VGA_H as u32 {
           let offset : usize = ((y * VGA_W + x) * 2) as usize;
-          let data : i16 = 0x1F20;
+          let data : i16 = 0x0F20;
           unsafe { *((VGA_BUFF + offset) as *mut i16) = data; }
         }
     }

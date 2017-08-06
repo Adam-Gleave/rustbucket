@@ -15,18 +15,24 @@
 mod driver;
 mod arch;
 
+use driver::vga::println;
+use driver::vga::clear_term;
+use arch::x86_64::gdt::gdt_init;
+use arch::x86_64::idt::idt_init;
+
 // main kernel function
 #[no_mangle] //disbale name mangling (func can be accessed from asm files)
 pub extern fn kernel_main() {
-	driver::vga::clear_term();
+	clear_term();
 
-  	driver::vga::println("Welcome to the Rustbucket kernel.");
-	driver::vga::println("Starting boot procedure...");
+  	println("Welcome to the Rustbucket kernel.");
+	println("Starting boot procedure...");
 
-	arch::x86_64::gdt::gdt_init();
-	driver::vga::println("\nSuccess! Created 64-bit GDT.");
-	arch::x86_64::idt::idt_init();
-	driver::vga::println("Success! Created 64-bit IDT.");
+	gdt_init();
+	println("\nSuccess! Created 64-bit GDT.");
+
+	idt_init();
+	println("Success! Created 64-bit IDT.");
 
 	// TODO
 	// ----
