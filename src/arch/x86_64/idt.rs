@@ -54,11 +54,11 @@ static mut IDT_POINTER: IdtPointer = IdtPointer {
 
 //set a static variable containing the IDT
 //we use a static variable, since we can find its location in memory with "VAR".as_ptr()
-static mut IDT: [IdtEntry; 256] = [IdtEntry::new(); 256];
+static mut IDT: [IdtEntry; 256] = [IdtEntry::missing(); 256];
 
 impl IdtEntry {
     //constructor, since Rust does not support forward declaration
-    pub const fn new() -> IdtEntry {
+    pub const fn missing() -> IdtEntry {
         IdtEntry {
             base_low: 0,
             selector: 0,
@@ -69,18 +69,36 @@ impl IdtEntry {
             zero2: 0
         }
     }
+
+    pub fn new(func: unsafe extern "C" fn()) -> IdtEntry {
+        IdtEntry {
+            base_low: ((func as u64 >> 0) & 0xFFFF) as u16,
+            base_middle: ((func as u64 >> 16) &0xFFFF) as u16,
+            base_high: ((func as u64 >> 32) &0xFFFFFFFF) as u32,
+
+            selector: 8,
+
+            zero1: 0,
+            zero2: 0,
+
+            flags: EntryFlags::TrapGate as u8 | EntryFlags::Present as u8
+        }
+    }
 }
 
-pub fn idt_init() {
+extern "C" { fn isr_stub(); }
 
-    //set up idt pointer structure
+pub fn idt_init() {
     unsafe {
+        IDT[1] = IdtEntry::new(isr_stub);
+
+        //set up idt pointer structure
         IDT_POINTER.limit = (IDT_LENGTH as u16 * size_of::<IdtEntry>() as u16) - 1;
         IDT_POINTER.base = IDT.as_ptr() as u64;
-    }
 
-    //set idt to cpu
-    unsafe { idt_install(&IDT_POINTER) }
+        //set idt to cpu
+        idt_install(&IDT_POINTER);
+    }
 
 	println("Success! Created 64-bit IDT.");
 }
