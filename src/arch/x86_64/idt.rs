@@ -4,6 +4,7 @@
 
 use core::mem::size_of;
 use driver::vga::println;
+use arch::pic;
 
 const IDT_LENGTH: usize = 256;
 
@@ -90,7 +91,8 @@ extern "C" { fn isr_stub(); }
 
 pub fn idt_init() {
     unsafe {
-        IDT[1] = IdtEntry::new(isr_stub);
+        IDT[33] = IdtEntry::new(isr_stub);
+        pic::irq_set_mask(1, true);
 
         //set up idt pointer structure
         IDT_POINTER.limit = (IDT_LENGTH as u16 * size_of::<IdtEntry>() as u16) - 1;
@@ -100,7 +102,7 @@ pub fn idt_init() {
         idt_install(&IDT_POINTER);
     }
 
-	println("Success! Created 64-bit IDT.");
+	println("Success! Created 64-bit IDT");
 }
 
 unsafe fn idt_install(idt: &IdtPointer) {

@@ -20,19 +20,22 @@ use driver::vga::clear_term;
 use arch::x86_64::gdt::gdt_init;
 use arch::x86_64::idt::idt_init;
 use arch::pic::pic_init;
+use arch::x86_64::interrupts::isr;
 
 // main kernel function
 #[no_mangle] //disbale name mangling (func can be accessed from asm files)
 pub extern fn kernel_main() {
 	clear_term();
 
-  	println("Welcome to the Rustbucket kernel.");
+  	println("Welcome to the Rustbucket kernel!");
 	println("Starting boot procedure...");
 
 	//initialise system
 	gdt_init(); //set up GDT (global descriptor table)
 	idt_init(); //set up IDT (interrupt descriptor table)
 	pic_init(); //set up PIC (programmable interrupt controller)
+	isr::enable();
+	println("Enabled interrupts");
 
 	// TODO
 	// ----

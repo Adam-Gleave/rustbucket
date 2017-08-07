@@ -58,7 +58,7 @@ pub static mut GDT_POINTER: GdtPointer = GdtPointer {
 
 //set a static variable containing the GDT
 //we use a static variable, since we can find its location in memory with "VAR".as_ptr()
-static mut GDT: [GdtEntry; 3] = [GdtEntry::new(); 3];
+pub static mut GDT: [GdtEntry; 3] = [GdtEntry::new(); 3];
 
 impl GdtEntry {
     //constructor, since Rust does not support forward declaration
@@ -127,7 +127,7 @@ pub fn gdt_init() {
     unsafe { gdt_install(&GDT_POINTER); }
 
     //confirm success via VGA
-	println("\nSuccess! Created 64-bit GDT.");
+	println("\nSuccess! Created 64-bit GDT");
 }
 
 unsafe fn gdt_install(gdt: &GdtPointer) {
