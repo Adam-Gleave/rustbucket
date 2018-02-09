@@ -92,6 +92,7 @@ extern "C" { fn isr_stub(); }
 pub fn idt_init() {
     unsafe {
         IDT[33] = IdtEntry::new(isr_stub);
+        IDT[1] = IdtEntry::new(isr_stub);
         pic::irq_set_mask(1, true);
 
         //set up idt pointer structure
