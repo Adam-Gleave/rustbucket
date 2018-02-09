@@ -39,6 +39,7 @@ const OCW3_ISR: u8 = 0x0b;
 const PIC_OFFSET_MASTER: u8 = 32; //offset the PIC indexes by 32
 const PIC_OFFSET_SLAVE: u8 = PIC_OFFSET_MASTER + 8;
 
+#[no_mangle]
 pub fn pic_init() {
     unsafe {
         //start the initialisation of the PICs
