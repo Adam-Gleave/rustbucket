@@ -62,5 +62,6 @@ extern fn eh_personality() {}
 #[no_mangle]
 // ensure the function does not return
 pub extern fn panic_fmt() -> ! {
+	println("Unhandled interrupt! System panic!");
     loop{}
 }
