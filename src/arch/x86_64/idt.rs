@@ -48,14 +48,40 @@ pub struct IdtPointer {
 
 //set a static variable containing the IDT pointer
 //we use a static variable, since we can find its location in memory with "VAR".as_ptr()
-static mut IDT_POINTER: IdtPointer = IdtPointer {
-    limit: 0,
-    base: 0
-};
+impl IdtPointer {
+    pub fn new() -> IdtPointer {
+        IdtPointer {
+            limit: 0,
+            base: 0
+        }
+    }
+}
+
+pub struct Idt([IdtEntry; 256]);
+
+impl Idt {
+    pub fn new() -> Idt {
+        Idt([IdtEntry::missing(); 256])
+    }
+
+    pub fn set_handler(&mut self, vector: u8, func: unsafe extern "C" fn()) {
+        self.0[vector as usize] = IdtEntry::new(func);
+    }
+
+    pub fn install(&self) {
+        let mut ptr = IdtPointer::new();
+        ptr.limit = (IDT_LENGTH as u16 * size_of::<IdtEntry>() as u16) - 1;
+        ptr.base = self as *const _ as u64;
+
+        unsafe {
+            asm!("lidt ($0)" :: "r" (&ptr) : "memory");
+        }
+    }
+}
 
 //set a static variable containing the IDT
 //we use a static variable, since we can find its location in memory with "VAR".as_ptr()
-static mut IDT: [IdtEntry; 256] = [IdtEntry::missing(); 256];
+//let mut IDT: [IdtEntry; 256] = [IdtEntry::missing(); 256];
 
 impl IdtEntry {
     //constructor, since Rust does not support forward declaration
@@ -72,10 +98,12 @@ impl IdtEntry {
     }
 
     pub fn new(func: unsafe extern "C" fn()) -> IdtEntry {
+        let pointer = func as u64;
+
         IdtEntry {
-            base_low: ((func as u64 >> 0) & 0xFFFF) as u16,
-            base_middle: ((func as u64 >> 16) &0xFFFF) as u16,
-            base_high: ((func as u64 >> 32) &0xFFFFFFFF) as u32,
+            base_low: pointer as u16,
+            base_middle: (pointer >> 16) as u16,
+            base_high: (pointer >> 32) as u32,
 
             selector: 0x08,
 
@@ -90,22 +118,17 @@ impl IdtEntry {
 extern "C" { fn isr_stub(); }
 extern "C" { fn isr_except_stub(); }
 
+// Initialise IDT
 pub fn idt_init() {
     unsafe {
-        IDT[0] = IdtEntry::new(isr_except_stub);
-        IDT[33] = IdtEntry::new(isr_stub);
+        let mut IDT = Idt::new();
 
-        //set up idt pointer structure
-        IDT_POINTER.limit = (IDT_LENGTH as u16 * size_of::<IdtEntry>() as u16) - 1;
-        IDT_POINTER.base = IDT.as_ptr() as u64;
+        // Set ISR handlers
+        IDT.set_handler(0, isr_except_stub); // Divide by zero
+        IDT.set_handler(33, isr_stub); // Keyboard
 
-        //set idt to cpu
-        idt_install(&IDT_POINTER);
+        IDT.install();
     }
 
 	println("Success! Created 64-bit IDT");
-}
-
-unsafe fn idt_install(idt: &IdtPointer) {
-    asm!("lidt ($0)" :: "r" (idt) : "memory");
 }
