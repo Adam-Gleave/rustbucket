@@ -107,12 +107,12 @@ impl GdtEntry {
 
         GdtEntry {
             //set the base (offset) of the entry
-            base_low: ((base_in >> 0) & 0xFFFF) as u16,
-            base_middle: ((base_in >> 16) & 0xFF) as u8,
-            base_high: ((base_in >> 24) & 0xFF) as u8,
+            base_low: base_in as u16,
+            base_middle: (base_in >> 16) as u8,
+            base_high: (base_in >> 24) as u8,
 
             //set the size of the entry
-            limit_low: (limit_in & 0xFFFF) as u16,
+            limit_low: limit_in as u16,
             granularity: flags,
 
             //set the access level of the entry

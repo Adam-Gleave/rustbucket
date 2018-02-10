@@ -49,9 +49,9 @@ pub extern fn kernel_main() {
 	pic_init(); //set up PIC (programmable interrupt controller)
 	isr::enable();
 	println("Enabled interrupts");
-	println("\nTesting divide by zero exception...");
-	let mut x: u8 = 1;
-	x = x / 0;
+
+	try_exception();
+
 
 	// TODO
 	// ----
@@ -67,4 +67,11 @@ pub extern fn kernel_main() {
 	// Add a keyboard IRQ handler
 	// Create a mini kernel-space command-line
 	// Begin writing filesystem implementation (filesystems, inodes, file descriptors, etc.)
+}
+
+#[no_mangle]
+pub fn try_exception() {
+	println("\nTesting divide by zero exception...");
+	let mut x: u8 = 1;
+	x = x / 0;
 }

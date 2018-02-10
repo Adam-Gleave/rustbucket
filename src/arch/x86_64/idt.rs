@@ -41,7 +41,7 @@ enum EntryFlags {
 }
 
 //contains the pointer to the gdt that must be passed to assembly
-#[repr(align(16))]
+#[repr(packed)]
 pub struct IdtPointer {
     pub limit: u16,
     pub base: u64
@@ -108,7 +108,7 @@ impl IdtEntry {
             base_middle: (pointer >> 16) as u16,
             base_high: (pointer >> 32) as u32,
 
-            selector: 0x08,
+            selector: 8,
 
             zero1: 0,
             zero2: 0,
