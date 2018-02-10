@@ -130,6 +130,9 @@ pub fn gdt_init() {
 	println("\nSuccess! Created 64-bit GDT");
 }
 
+extern "C" { fn gdt_flush(); }
+
 unsafe fn gdt_install(gdt: &GdtPointer) {
     asm!("lgdt ($0)" :: "r" (gdt) : "memory");
+    gdt_flush();
 }

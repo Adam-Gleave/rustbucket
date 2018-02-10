@@ -22,6 +22,19 @@ use arch::x86_64::idt::idt_init;
 use arch::pic::pic_init;
 use arch::x86_64::interrupts::isr;
 
+// called on system panic -- not implemented yet
+#[lang = "eh_personality"]
+extern fn eh_personality() {}
+
+// system panic -- not implemented yet
+#[lang = "panic_fmt"]
+#[no_mangle]
+// ensure the function does not return
+pub extern fn panic_fmt() -> ! {
+	println("Unhandled interrupt! System panic!");
+    loop{}
+}
+
 // main kernel function
 #[no_mangle] //disbale name mangling (func can be accessed from asm files)
 pub extern fn kernel_main() {
@@ -36,6 +49,9 @@ pub extern fn kernel_main() {
 	pic_init(); //set up PIC (programmable interrupt controller)
 	isr::enable();
 	println("Enabled interrupts");
+	println("\nTesting divide by zero exception...");
+	let mut x: u8 = 1;
+	x = x / 0;
 
 	// TODO
 	// ----
@@ -51,17 +67,4 @@ pub extern fn kernel_main() {
 	// Add a keyboard IRQ handler
 	// Create a mini kernel-space command-line
 	// Begin writing filesystem implementation (filesystems, inodes, file descriptors, etc.)
-}
-
-// called on system panic -- not implemented yet
-#[lang = "eh_personality"]
-extern fn eh_personality() {}
-
-// system panic -- not implemented yet
-#[lang = "panic_fmt"]
-#[no_mangle]
-// ensure the function does not return
-pub extern fn panic_fmt() -> ! {
-	println("Unhandled interrupt! System panic!");
-    loop{}
 }

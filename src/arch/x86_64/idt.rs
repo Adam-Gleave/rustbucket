@@ -40,7 +40,7 @@ enum EntryFlags {
 }
 
 //contains the pointer to the gdt that must be passed to assembly
-#[repr(packed)]
+#[repr(align(16))]
 pub struct IdtPointer {
     pub limit: u16,
     pub base: u64
@@ -77,7 +77,7 @@ impl IdtEntry {
             base_middle: ((func as u64 >> 16) &0xFFFF) as u16,
             base_high: ((func as u64 >> 32) &0xFFFFFFFF) as u32,
 
-            selector: 8,
+            selector: 0x08,
 
             zero1: 0,
             zero2: 0,
@@ -88,9 +88,11 @@ impl IdtEntry {
 }
 
 extern "C" { fn isr_stub(); }
+extern "C" { fn isr_except_stub(); }
 
 pub fn idt_init() {
     unsafe {
+        IDT[0] = IdtEntry::new(isr_except_stub);
         IDT[33] = IdtEntry::new(isr_stub);
 
         //set up idt pointer structure

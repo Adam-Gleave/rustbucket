@@ -5,6 +5,7 @@
 ;interrupt is passed to the right handler
 
 global isr_stub
+global isr_except_stub
 
 section .text
 bits 64
@@ -50,10 +51,19 @@ bits 64
   isr_stub: ;default isr handler
     PUSH_ALL
     cld
+
+    mov qword [0xb8000], 0x2f592f412f4b2f4f
+
+    POP_ALL
+    iretq
+
+  align 4
+  isr_except_stub: ;default exception handler
+    PUSH_ALL
+    cld
     mov rdi, rsp ;pass current stack pointer as argument
 
     mov qword [0xb8000], 0x2f592f412f4b2f4f
 
-    mov rsp, rax ;restore stack pointer returned from Rust function
     POP_ALL
     iretq
