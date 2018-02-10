@@ -3,7 +3,8 @@
 //defines the Interrupt Descriptor Table, for use in long mode.
 
 use core::mem::size_of;
-use driver::vga::println;
+use driver::vga::Writer;
+use core::fmt::Write;
 use arch::pic;
 
 const IDT_LENGTH: usize = 256;
@@ -76,6 +77,8 @@ impl Idt {
         unsafe {
             asm!("lidt ($0)" :: "r" (&ptr) : "memory");
         }
+
+        write!(Writer::new(), "Success! Created 64-bit IDT at address 0x{:X}\n", ptr.base);
     }
 }
 
@@ -129,6 +132,4 @@ pub fn idt_init() {
 
         IDT.install();
     }
-
-	println("Success! Created 64-bit IDT");
 }

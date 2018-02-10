@@ -4,7 +4,8 @@
 //a table has already been defined for protected mode, in boot.asm
 
 use core::mem::size_of;
-use driver::vga::println;
+use driver::vga::Writer;
+use core::fmt::Write;
 
 const GDT_LENGTH: usize = 3;
 
@@ -51,14 +52,41 @@ pub struct GdtPointer {
 
 //set a static variable containing the GDT pointer
 //we use a static variable, since we can find its location in memory with "VAR".as_ptr()
-pub static mut GDT_POINTER: GdtPointer = GdtPointer {
-        limit: 0,
-        base: 0
-};
+impl GdtPointer {
+    pub fn new() -> GdtPointer {
+        GdtPointer {
+            limit: 0,
+            base: 0
+        }
+    }
+}
 
-//set a static variable containing the GDT
-//we use a static variable, since we can find its location in memory with "VAR".as_ptr()
-pub static mut GDT: [GdtEntry; 3] = [GdtEntry::new(); 3];
+extern "C" { fn gdt_flush(); }
+
+pub struct Gdt([GdtEntry; 3]);
+
+impl Gdt {
+    pub fn new() -> Gdt {
+        Gdt([GdtEntry::new(); 3])
+    }
+
+    pub fn set_segment(&mut self, vector: u8, entry: GdtEntry) {
+        self.0[vector as usize] = entry;
+    }
+
+    pub fn install(&self) {
+        let mut ptr = GdtPointer::new();
+        ptr.limit = (GDT_LENGTH as u16 * size_of::<GdtEntry>() as u16) - 1;
+        ptr.base = self as *const _ as u64;
+    
+        unsafe {
+            asm!("lgdt ($0)" :: "r" (&ptr) : "memory");
+            gdt_flush();
+        }
+
+        write!(Writer::new(), "\nSuccess! Created 64-bit GDT at address 0x{:X}\n", ptr.base);
+    }
+}
 
 impl GdtEntry {
     //constructor, since Rust does not support forward declaration
@@ -110,29 +138,12 @@ pub fn gdt_init() {
         GranularityFlags::Page as u8 |
         GranularityFlags::LongMode_64 as u8;
 
+    let mut gdt = Gdt::new();
+
     //set up gdt entries
-    unsafe {
-        GDT[0] = GdtEntry::set_up(0, 0, 0, 0);
-        GDT[1] = GdtEntry::set_up(0, 0xFFFFF, code_flags, granularity_flags);
-        GDT[2] = GdtEntry::set_up(0, 0xFFFFF, data_flags, granularity_flags);
-    }
+    gdt.set_segment(0, GdtEntry::set_up(0, 0, 0, 0));
+    gdt.set_segment(1, GdtEntry::set_up(0, 0xFFFFF, code_flags, granularity_flags));
+    gdt.set_segment(2, GdtEntry::set_up(0, 0xFFFFF, data_flags, granularity_flags));
 
-    //set up gdt pointer structure
-    unsafe {
-        GDT_POINTER.limit = (GDT_LENGTH as u16 * size_of::<GdtEntry>() as u16) - 1;
-        GDT_POINTER.base = GDT.as_ptr() as u64;
-    }
-
-    //set gdt to cpu
-    unsafe { gdt_install(&GDT_POINTER); }
-
-    //confirm success via VGA
-	println("\nSuccess! Created 64-bit GDT");
-}
-
-extern "C" { fn gdt_flush(); }
-
-unsafe fn gdt_install(gdt: &GdtPointer) {
-    asm!("lgdt ($0)" :: "r" (gdt) : "memory");
-    gdt_flush();
+    gdt.install();
 }
