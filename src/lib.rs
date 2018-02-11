@@ -50,20 +50,13 @@ pub extern fn kernel_main() {
 
 	//initialise system
 	gdt_init(); //set up GDT (global descriptor table)
-	bochs_break();
-
 	idt_init(); //set up IDT (interrupt descriptor table)
-	bochs_break();
-
 	pic_init(); //set up PIC (programmable interrupt controller)
-	bochs_break();
 
 	isr::enable();
 	println("Enabled interrupts");
 
-	bochs_break();
-
-	try_exception();
+	loop {}
 
 
 	// TODO
@@ -89,11 +82,4 @@ pub fn bochs_break() {
 	unsafe {
 		asm!("xchg bx, bx" :::: "intel");
 	}
-}
-
-#[no_mangle]
-pub fn try_exception() {
-	println("\nTesting divide by zero exception...");
-	let mut x: u8 = 1;
-	x = x / 0;
 }

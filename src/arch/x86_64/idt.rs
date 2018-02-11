@@ -14,6 +14,7 @@ const IDT_LENGTH: usize = 256;
 #[macro_export]
 macro_rules! save_registers {
     () => {
+        #[naked]
         asm!("push rax
             push rcx
             push rdx
@@ -30,6 +31,7 @@ macro_rules! save_registers {
 #[macro_export]
 macro_rules! restore_registers {
     () => {
+        #[naked]
         asm!("pop r11
             pop r10
             pop r9
@@ -139,9 +141,13 @@ lazy_static! {
     static ref IDT: Idt = {
         let mut idt = Idt::new();
         
+        // Exceptions
         idt.set_handler(0, handler!(divide_by_zero_handler));
         idt.set_handler(6, handler!(invalid_opcode_handler));
         idt.set_handler(14, handler_with_error_code!(page_fault_handler));
+
+        // Interrupts
+        idt.set_handler(33, handler!(keyboard_handler));
 
         idt
     };
@@ -213,6 +219,7 @@ pub struct InterruptFrame {
 }
 
 extern "C" fn divide_by_zero_handler(frame: &InterruptFrame) {
+    bochs_break();
     write!(Writer::new(), "Exception: Attempted to divide by zero.\n{:#?}",
         unsafe { &*frame });
     loop {}
@@ -229,6 +236,11 @@ extern "C" fn page_fault_handler(frame: &InterruptFrame, code: u64) -> ! {
         code, unsafe { &*frame });
     loop {}
 }
+
+extern "C" fn keyboard_handler(frame: &InterruptFrame) {
+    write!(Writer::new(), "Interrupt: Key pressed.");
+    loop {}
+} 
 
 // Initialise IDT
 pub fn idt_init() {
