@@ -6,6 +6,7 @@
 use core::mem::size_of;
 use driver::vga::Writer;
 use core::fmt::Write;
+use bochs_break;
 
 const GDT_LENGTH: usize = 3;
 
@@ -61,35 +62,62 @@ impl GdtPointer {
     }
 }
 
-extern "C" { fn gdt_flush(); }
-
 pub struct Gdt([GdtEntry; 3]);
+
+lazy_static! {
+    static ref GDT: Gdt = {
+        let mut gdt = Gdt::new();
+
+        //set access flags for code segments
+        let code_flags: u8 =
+            AccessFlags::ReadWrite as u8 |
+            AccessFlags::Executable as u8 |
+            AccessFlags::One as u8 |
+            AccessFlags::Present as u8;
+        //set access flags for data segments
+        let data_flags: u8 =
+            AccessFlags::ReadWrite as u8 |
+            AccessFlags::One as u8 |
+            AccessFlags::Present as u8;
+        //set granularity flags, indicate a 64-bit table
+        let granularity_flags: u8 =
+            GranularityFlags::Page as u8 |
+            GranularityFlags::LongMode_64 as u8;
+
+        gdt.set_entry(0, GdtEntry::set_up(0, 0, 0, 0));
+        gdt.set_entry(1, GdtEntry::set_up(0, 0xFFFFF, code_flags, granularity_flags));
+        gdt.set_entry(2, GdtEntry::set_up(0, 0xFFFFF, data_flags, granularity_flags));
+
+        gdt
+    };
+}
 
 impl Gdt {
     pub fn new() -> Gdt {
-        Gdt([GdtEntry::new(); 3])
+        Gdt([GdtEntry::missing(); 3])
     }
 
-    pub fn set_segment(&mut self, vector: u8, entry: GdtEntry) {
-        self.0[vector as usize] = entry;
+    pub fn set_entry(&mut self, vector: u8, entry: GdtEntry) {
+       self.0[vector as usize] = entry;
     }
 
-    pub fn install(&self) {
+    pub fn install(&'static self) {
         let mut ptr = GdtPointer::new();
         ptr.limit = (GDT_LENGTH as u16 * size_of::<GdtEntry>() as u16) - 1;
         ptr.base = self as *const _ as u64;
-    
+        let location: u64 = ptr.base;
+
         unsafe {
             asm!("lgdt ($0)" :: "r" (&ptr) : "memory");
         }
 
-        write!(Writer::new(), "\nSuccess! Created 64-bit GDT at address 0x{:X}\n", ptr.base);
+        write!(Writer::new(), "\nSuccess! Created 64-bit GDT at address 0x{:X}\n", location);
     }
 }
 
 impl GdtEntry {
     //constructor, since Rust does not support forward declaration
-    pub const fn new() -> GdtEntry {
+    pub const fn missing() -> GdtEntry {
         GdtEntry {
             base_low: 0,
             base_middle: 0,
@@ -121,28 +149,5 @@ impl GdtEntry {
 }
 
 pub fn gdt_init() {
-    //set access flags for code segments
-    let code_flags: u8 =
-        AccessFlags::ReadWrite as u8 |
-        AccessFlags::Executable as u8 |
-        AccessFlags::One as u8 |
-        AccessFlags::Present as u8;
-    //set access flags for data segments
-    let data_flags: u8 =
-        AccessFlags::ReadWrite as u8 |
-        AccessFlags::One as u8 |
-        AccessFlags::Present as u8;
-    //set granularity flags, indicate a 64-bit table
-    let granularity_flags: u8 =
-        GranularityFlags::Page as u8 |
-        GranularityFlags::LongMode_64 as u8;
-
-    let mut gdt = Gdt::new();
-
-    //set up gdt entries
-    gdt.set_segment(0, GdtEntry::set_up(0, 0, 0, 0));
-    gdt.set_segment(1, GdtEntry::set_up(0, 0xFFFFF, code_flags, granularity_flags));
-    gdt.set_segment(2, GdtEntry::set_up(0, 0xFFFFF, data_flags, granularity_flags));
-
-    gdt.install();
+    GDT.install();
 }

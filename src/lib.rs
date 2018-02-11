@@ -12,6 +12,10 @@
 #![feature(attr_literals)]
 #![feature(const_fn)]
 #![feature(naked_functions)] //removes extraneous asm from rust functions
+#![feature(core_intrinsics)]
+
+#[macro_use]
+extern crate lazy_static;
 
 mod driver;
 mod arch;
@@ -37,7 +41,7 @@ pub extern fn panic_fmt() -> ! {
 }
 
 // main kernel function
-#[no_mangle] //disbale name mangling (func can be accessed from asm files)
+#[no_mangle] //disable name mangling (func can be accessed from asm files)
 pub extern fn kernel_main() {
 	clear_term();
 
@@ -53,7 +57,7 @@ pub extern fn kernel_main() {
 
 	pic_init(); //set up PIC (programmable interrupt controller)
 	bochs_break();
-	
+
 	isr::enable();
 	println("Enabled interrupts");
 
