@@ -11,6 +11,7 @@
 #![feature(repr_align)]
 #![feature(attr_literals)]
 #![feature(const_fn)]
+#![feature(naked_functions)] //removes extraneous asm from rust functions
 
 mod driver;
 mod arch;
@@ -67,6 +68,15 @@ pub extern fn kernel_main() {
 	// Add a keyboard IRQ handler
 	// Create a mini kernel-space command-line
 	// Begin writing filesystem implementation (filesystems, inodes, file descriptors, etc.)
+}
+
+// Bochs breakpoint
+#[naked]
+#[inline(always)]
+pub fn bochs_break() {
+	unsafe {
+		asm!("xchg bx, bx" :::: "intel");
+	}
 }
 
 #[no_mangle]

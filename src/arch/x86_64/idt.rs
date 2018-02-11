@@ -11,7 +11,7 @@ const IDT_LENGTH: usize = 256;
 
 //contains the structure of an idt entry
 #[derive(Copy, Clone, Debug)]
-#[repr(packed)]
+#[repr(C, packed)]
 pub struct IdtEntry {
     //base: offset in memory of entry
     base_low: u16,
@@ -41,7 +41,7 @@ enum EntryFlags {
 }
 
 //contains the pointer to the gdt that must be passed to assembly
-#[repr(packed)]
+#[repr(C, packed)]
 pub struct IdtPointer {
     pub limit: u16,
     pub base: u64
@@ -113,7 +113,7 @@ impl IdtEntry {
             zero1: 0,
             zero2: 0,
 
-            flags: EntryFlags::TrapGate as u8 | EntryFlags::Present as u8
+            flags: EntryFlags::InterruptGate as u8 | EntryFlags::Present as u8
         }
     }
 }

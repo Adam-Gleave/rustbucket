@@ -11,7 +11,7 @@ const GDT_LENGTH: usize = 3;
 
 //contains the structure of a gdt entry
 #[derive(Copy, Clone, Debug)]
-#[repr(packed)]
+#[repr(C, packed)]
 pub struct GdtEntry {
     //limit: size of entry
     limit_low: u16,
@@ -44,7 +44,7 @@ enum GranularityFlags {
 }
 
 //contains the pointer to the gdt that must be passed to assembly
-#[repr(packed)]
+#[repr(C, packed)]
 pub struct GdtPointer {
     pub limit: u16,
     pub base: u64
@@ -81,7 +81,6 @@ impl Gdt {
     
         unsafe {
             asm!("lgdt ($0)" :: "r" (&ptr) : "memory");
-            gdt_flush();
         }
 
         write!(Writer::new(), "\nSuccess! Created 64-bit GDT at address 0x{:X}\n", ptr.base);
@@ -103,7 +102,7 @@ impl GdtEntry {
 
     pub fn set_up(base_in: u32, limit_in: u32, access_in: u8, gran_in: u8) -> GdtEntry {
         let temp_flags: u8 = ((limit_in >> 16) & 0x0F) as u8;
-        let flags: u8 = temp_flags | ((gran_in << 4) &0x0F) as u8;
+        let flags: u8 = temp_flags | ((gran_in << 4) &0xF0) as u8;
 
         GdtEntry {
             //set the base (offset) of the entry
