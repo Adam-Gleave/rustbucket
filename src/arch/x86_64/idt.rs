@@ -6,6 +6,7 @@ use core::mem::size_of;
 use driver::vga::Writer;
 use core::fmt::Write;
 use arch::pic;
+use bochs_break;
 
 const IDT_LENGTH: usize = 256;
 
@@ -125,7 +126,7 @@ extern "C" { fn isr_except_stub(); }
 pub fn idt_init() {
     unsafe {
         let mut IDT = Idt::new();
-
+        
         // Set ISR handlers
         IDT.set_handler(0, isr_except_stub); // Divide by zero
         IDT.set_handler(33, isr_stub); // Keyboard

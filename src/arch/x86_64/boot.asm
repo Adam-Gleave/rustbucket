@@ -156,7 +156,7 @@ p3_table:
 p2_table:
   resb 4096
 stack_bottom:
-  resb 16384    ; reserve 16 KB of stack space for kernel
+  resb 32768    ; reserve 16 KB of stack space for kernel
 stack_top:
 
 ; set up a gdt table (64-bit)

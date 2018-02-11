@@ -59,6 +59,7 @@ bits 64
 
   align 4
   isr_except_stub: ;default exception handler
+    xchg bx, bx
     PUSH_ALL
     cld
     mov rdi, rsp ;pass current stack pointer as argument

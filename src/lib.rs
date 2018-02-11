@@ -46,10 +46,18 @@ pub extern fn kernel_main() {
 
 	//initialise system
 	gdt_init(); //set up GDT (global descriptor table)
+	bochs_break();
+
 	idt_init(); //set up IDT (interrupt descriptor table)
+	bochs_break();
+
 	pic_init(); //set up PIC (programmable interrupt controller)
+	bochs_break();
+	
 	isr::enable();
 	println("Enabled interrupts");
+
+	bochs_break();
 
 	try_exception();
 
