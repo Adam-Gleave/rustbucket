@@ -77,7 +77,7 @@ pub fn pic_init() {
 }
 
 //send an EOI to the necessary PIC to acknowledge end of interrupt
-pub fn pic_ack(irq: u8) {
+pub fn ack(irq: u8) {
     unsafe {
         //not a valid irq index
         if irq >= 16 {
@@ -115,7 +115,7 @@ pub fn irq_set_mask(mut irq: u8, enable: bool) {
             port_io::outb(port, value);
         } else {
             value = port_io::inb(port) | (1 << irq);
-            port_io::outb(port,  value);
+            port_io::outb(port, value);
         }
     }
 }

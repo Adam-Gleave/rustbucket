@@ -13,6 +13,7 @@
 #![feature(const_fn)]
 #![feature(naked_functions)] //removes extraneous asm from rust functions
 #![feature(core_intrinsics)]
+#![feature(abi_x86_interrupt)]
 
 #[macro_use]
 extern crate lazy_static;
@@ -52,7 +53,7 @@ pub extern fn kernel_main() {
 	gdt_init(); //set up GDT (global descriptor table)
 	idt_init(); //set up IDT (interrupt descriptor table)
 	pic_init(); //set up PIC (programmable interrupt controller)
-
+	
 	isr::enable();
 	println("Enabled interrupts");
 
