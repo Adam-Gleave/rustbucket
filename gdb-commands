@@ -1,4 +1,0 @@
-target remote localhost:1234
-symbol-file ~/rustbucket/build/kernel-x86_64.bin
-break kernel_main
-continue

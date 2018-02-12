@@ -143,8 +143,24 @@ lazy_static! {
         
         // Exceptions
         idt.set_handler(0, handler!(divide_by_zero_handler));
+        idt.set_handler(1, handler!(debug_handler));
+        idt.set_handler(3, handler!(breakpoint_handler));
+        idt.set_handler(4, handler!(overflow_handler));
+        idt.set_handler(5, handler!(bounds_handler));
         idt.set_handler(6, handler!(invalid_opcode_handler));
+        idt.set_handler(7, handler!(device_na_handler));
+        idt.set_handler(8, handler_with_error_code!(double_fault_handler));
+        idt.set_handler(10, handler_with_error_code!(invalid_tss_handler));
+        idt.set_handler(11, handler_with_error_code!(segment_not_present_handler));
+        idt.set_handler(12, handler_with_error_code!(stack_segment_fault_handler));
+        idt.set_handler(13, handler_with_error_code!(gpf_handler));
         idt.set_handler(14, handler_with_error_code!(page_fault_handler));
+        idt.set_handler(16, handler!(x87_floating_point_handler));
+        idt.set_handler(17, handler_with_error_code!(alignment_check_handler));
+        idt.set_handler(18, handler!(machine_check_handler));
+        idt.set_handler(19, handler!(simd_loating_point_handler));
+        idt.set_handler(20, handler!(virtualization_handler));
+        idt.set_handler(30, handler_with_error_code!(security_handler));
 
         // Interrupts
         idt.set_handler(33, handler!(keyboard_handler));
@@ -218,25 +234,140 @@ pub struct InterruptFrame {
     stack_segment: u64
 }
 
+// Vector 0
 extern "C" fn divide_by_zero_handler(frame: &InterruptFrame) {
-    bochs_break();
-    write!(Writer::new(), "Exception: Attempted to divide by zero.\n{:#?}",
+    write!(Writer::new(), "Exception: DIVIDE BY ZERO.\n\n{:#?}",
         unsafe { &*frame });
     loop {}
 }
 
+// Vector 1
+extern "C" fn debug_handler(frame: &InterruptFrame) {
+    write!(Writer::new(), "EXCEPTION: DEBUG.\n\n{:#?}",
+        unsafe { &*frame });
+    loop {}
+}
+
+// Vector 3
+extern "C" fn breakpoint_handler(frame: &InterruptFrame) {
+    write!(Writer::new(), "EXCEPTION: BREAK POINT.\n\n{:#?}",
+        unsafe { &*frame });
+    loop {}
+}
+
+// Vector 4
+extern "C" fn overflow_handler(frame: &InterruptFrame) {
+    write!(Writer::new(), "EXCEPTION: OVERFLOW.\n\n{:#?}",
+        unsafe { &*frame });
+    loop {}
+}
+
+// Vector 5
+extern "C" fn bounds_handler(frame: &InterruptFrame) {
+    write!(Writer::new(), "Exception: BOUND RANGE EXCEEDED.\n\n{:#?}",
+        unsafe { &*frame });
+    loop {}
+}
+
+// Vector 6
 extern "C" fn invalid_opcode_handler(frame: &InterruptFrame) {
-    write!(Writer::new(),  "Exception: Invalid opcode.\n{:#?}",
+    write!(Writer::new(),  "EXCEPTION: INVALID OPCODE.\n\n{:#?}",
         unsafe { &*frame });
     loop {}
 }
 
-extern "C" fn page_fault_handler(frame: &InterruptFrame, code: u64) -> ! {
-    write!(Writer::new(),  "Exception: PAGE FAULT, error code {:?}\n{:#?}",
+// Vector 7
+extern "C" fn device_na_handler(frame: &InterruptFrame) {
+    write!(Writer::new(), "Exception: DEVICE NOT AVAILABLE.\n\n{:#?}",
+        unsafe { &*frame });
+    loop {}
+}
+
+// Vector 8
+extern "C" fn double_fault_handler(frame: &InterruptFrame, code: u64) -> !{
+    write!(Writer::new(),  "EXCEPTION: DOUBLE FAULT, error code {:?}\n\n{:#?}",
+        code, unsafe { &*frame });
+    loop {}    
+}
+
+// Vector 10
+extern "C" fn invalid_tss_handler(frame: &InterruptFrame, code: u64) -> !{
+    write!(Writer::new(),  "EXCEPTION: PAGE FAULT, error code {:?}\n\n{:#?}",
         code, unsafe { &*frame });
     loop {}
 }
 
+// Vector 11
+extern "C" fn segment_not_present_handler(frame: &InterruptFrame, code: u64) -> !{
+    write!(Writer::new(),  "EXCEPTION: SEGMENT NOT PRESENT, error code {:?}\n\n{:#?}",
+        code, unsafe { &*frame });
+    loop {}
+}
+
+// Vector 12
+extern "C" fn stack_segment_fault_handler(frame: &InterruptFrame, code: u64) -> !{
+    write!(Writer::new(),  "EXCEPTION: STACK SEGMENT FAULT, error code {:?}\n\n{:#?}",
+        code, unsafe { &*frame });
+    loop {}
+}
+
+// Vector 13
+extern "C" fn gpf_handler(frame: &InterruptFrame, code: u64) -> !{
+    write!(Writer::new(),  "EXCEPTION: GENERAL PROTECTION FAULT, error code {:?}\n\n{:#?}",
+        code, unsafe { &*frame });
+    loop {}
+}
+
+// Vector 14
+extern "C" fn page_fault_handler(frame: &InterruptFrame, code: u64) -> ! {
+    write!(Writer::new(),  "EXCEPTION: PAGE FAULT, error code {:?}\n\n{:#?}",
+        code, unsafe { &*frame });
+    loop {}
+}
+
+// Vector 16
+extern "C" fn x87_floating_point_handler(frame: &InterruptFrame) {
+    write!(Writer::new(),  "EXCEPTION: x87 FLOATING POINT EXCEPTION. \n\n{:#?}",
+        unsafe { &*frame });
+    loop {}
+}
+
+// Vector 17
+extern "C" fn alignment_check_handler(frame: &InterruptFrame, code: u64) -> ! {
+    write!(Writer::new(),  "EXCEPTION: ALIGNMENT CHECK, error code {:?}\n\n{:#?}",
+        code, unsafe { &*frame });
+    loop {}
+}
+
+// Vector 18
+extern "C" fn machine_check_handler(frame: &InterruptFrame) {
+    write!(Writer::new(), "Exception: MACHINE CHECK.\n\n{:#?}",
+        unsafe { &*frame });
+    loop {}
+}
+
+// Vector 19
+extern "C" fn simd_loating_point_handler(frame: &InterruptFrame) {
+    write!(Writer::new(),  "EXCEPTION: SIMD FLOATING POINT EXCEPTION. \n\n{:#?}",
+        unsafe { &*frame });
+    loop {}
+}
+
+// Vector 20
+extern "C" fn virtualization_handler(frame: &InterruptFrame) {
+    write!(Writer::new(),  "EXCEPTION: VIRTUALIZATION EXCEPTION. \n\n{:#?}",
+        unsafe { &*frame });
+    loop {}
+}
+
+// Vector 30
+extern "C" fn security_handler(frame: &InterruptFrame, code: u64) -> !{
+    write!(Writer::new(),  "EXCEPTION: SECURITY EXCEPTION, error code {:?}\n\n{:#?}",
+        code, unsafe { &*frame });
+    loop {}
+}
+
+// PIC vector 1, IDT vector 33
 extern "C" fn keyboard_handler(frame: &InterruptFrame) {
     write!(Writer::new(), "Interrupt: Key pressed.");
     loop {}
