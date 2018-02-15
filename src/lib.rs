@@ -21,6 +21,7 @@ extern crate lazy_static;
 mod driver;
 mod arch;
 
+use driver::vga::print;
 use driver::vga::println;
 use driver::vga::clear_term;
 use arch::x86_64::gdt::gdt_init;
@@ -46,8 +47,9 @@ pub extern fn panic_fmt() -> ! {
 pub extern fn kernel_main() {
 	clear_term();
 
-  	println("Welcome to the Rustbucket kernel!");
-	println("Starting boot procedure...");
+  	print("Welcome to the ", 0x07);
+  	print("rustbucket", 0x06);
+  	println(" kernel!\nStarting boot procedure...");
 
 	//initialise system
 	gdt_init(); //set up GDT (global descriptor table)
@@ -55,7 +57,11 @@ pub extern fn kernel_main() {
 	pic_init(); //set up PIC (programmable interrupt controller)
 	
 	isr::enable();
-	println("Enabled interrupts");
+	println("Enabled interrupts.\n");
+
+    unsafe { asm!("int3"); };
+
+    println("\nReturned from exception!");
 
 	loop {}
 

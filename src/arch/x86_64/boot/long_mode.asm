@@ -7,7 +7,7 @@ section .text
 bits 64 ; inform nasm of 64-bit instructions
 long_mode_start:
 
-	; print `OKAY` to screen, so we know we got this far
+  ; print `OKAY` to screen, so we know we got this far
   mov rax, 0x2f592f412f4b2f4f
   mov qword [0xb8000], rax
 
@@ -16,4 +16,4 @@ long_mode_start:
 
 halt:
   hlt
-	jmp halt ; Infinite loop
+  jmp halt ; Infinite loop

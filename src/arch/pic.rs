@@ -70,7 +70,7 @@ pub fn pic_init() {
         port_io::outb(PIC_MASTER_DATA, 0xFF);
         port_io::outb(PIC_SLAVE_DATA, 0xFF);
 
-        irq_set_mask(1, false);
+        irq_set_mask(1, true);
     }
 
     vga::println("Initialised the PIC, at an offset of 0x20");
