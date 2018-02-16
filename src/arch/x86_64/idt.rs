@@ -12,7 +12,9 @@ use bochs_break;
 const IDT_LENGTH: usize = 256;
 
 extern "C" {
+    fn isr_default();
     fn divide_by_zero_wrapper();
+    fn breakpoint_wrapper();
 }
 
 //contains the structure of an idt entry
@@ -71,29 +73,9 @@ lazy_static! {
         let mut idt = Idt::new();
         
         // Exceptions
-        //idt.set_handler(0, handler!(divide_by_zero_handler));
-        idt.set_handler(1, divide_by_zero_wrapper as u64);
-        //idt.set_handler(3, breakpoint_handler_wrapper as u64);
-        // idt.set_handler(4, overflow_handler);
-        // idt.set_handler(5, bounds_handler);
-        //idt.set_handler(6, handler!(invalid_opcode_handler));
-        // idt.set_handler(7, device_na_handler);
-        // idt.set_handler_with_err(8, double_fault_handler);
-        // idt.set_handler_with_err(10, invalid_tss_handler);
-        // idt.set_handler_with_err(11, segment_not_present_handler);
-        // idt.set_handler_with_err(12, stack_segment_fault_handler);
-        // idt.set_handler_with_err(13, gpf_handler);
-        //idt.set_handler(14, handler_with_err!(page_fault_handler));
-        // idt.set_handler(16, x87_floating_point_handler);
-        // idt.set_handler_with_err(17, alignment_check_handler);
-        // idt.set_handler(18, machine_check_handler);
-        // idt.set_handler(19, simd_loating_point_handler);
-        // idt.set_handler(20, virtualization_handler);
-        // idt.set_handler_with_err(30, security_handler);
-
-        // Interrupts
-        //idt.set_handler(33, keyboard_handler);
-        //idt.set_interrupt(7, handler!(spurious_handler));
+        idt.set_handler(0, divide_by_zero_wrapper as u64);
+        idt.set_handler(1, isr_default as u64);
+        idt.set_handler(3, breakpoint_wrapper as u64);
 
         idt
     };

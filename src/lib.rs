@@ -14,6 +14,7 @@
 #![feature(naked_functions)] //removes extraneous asm from rust functions
 #![feature(core_intrinsics)]
 #![feature(abi_x86_interrupt)]
+#![feature(linkage)]
 
 #[macro_use]
 extern crate lazy_static;
@@ -59,12 +60,15 @@ pub extern fn kernel_main() {
 	isr::enable();
 	println("Enabled interrupts.\n");
 
-    unsafe { asm!("int3"); };
+	bochs_break();
+    unsafe {
+        asm!("int3");
+    }
 
-    println("\nReturned from exception!");
+    bochs_break();
+    println("Returned from exception!");
 
 	loop {}
-
 
 	// TODO
 	// ----

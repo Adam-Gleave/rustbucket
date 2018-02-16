@@ -108,7 +108,14 @@ impl Gdt {
         let location: u64 = ptr.base;
 
         unsafe {
-            asm!("lgdt ($0)" :: "r" (&ptr) : "memory");
+            asm!("lgdt ($0)
+                mov $$0x10, %ax
+                mov %ax, %ds
+                mov %ax, %fs
+                mov %ax, %es
+                mov %ax, %gs
+                mov %ax, %ss" 
+                :: "r" (&ptr) : "memory");
         }
 
         write!(Writer::new(), "\nSuccess! Created 64-bit GDT at address 0x{:X}\n", location);
