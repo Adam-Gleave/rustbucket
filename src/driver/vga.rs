@@ -4,12 +4,17 @@
 //eg. print_char, print_line, terminal_clear etc
 
 use core::fmt;
+use arch::port_io;
 
 static mut VGA_COL: u32 = 0;
 static mut VGA_ROW: u32 = 0;
 const VGA_W: u32 = 80;
 const VGA_H: u32 = 25;
 const VGA_BUFF: usize = 0xB8000;
+
+static mut CURSOR_STATE: bool = false;
+const CURSOR_LOW_PORT: u16 = 0x3D4;
+const CURSOR_HIGH_PORT: u16 = 0x3D5;
 
 extern crate rlibc;
 
@@ -42,6 +47,8 @@ pub fn print_char(c: char, color: u8) {
 			}
 		}
 	}
+
+	cursor_update();
 }
 
 pub fn print_byte(c: u8, color: u8) {
@@ -67,17 +74,21 @@ pub fn print_byte(c: u8, color: u8) {
 			}
 		}
 	}
+
+	cursor_update();
 }
 
 pub fn print(str: &str, color: u8) {
 	for c in str.chars() {
         print_char(c, color);
   }
+  cursor_update();
 }
 
 pub fn println(str: &str) {
 	print(str, 0x07);
 	print_char('\n', 0x07);
+	cursor_update();
 }
 
 pub fn clear_term() {
@@ -89,6 +100,7 @@ pub fn clear_term() {
           unsafe { *((VGA_BUFF + offset) as *mut i16) = data; }
         }
     }
+    cursor_update();
 }
 
 // Writer structure, used for write! macro
@@ -110,7 +122,43 @@ impl fmt::Write for Writer {
         for byte in s.bytes() {
           print_byte(byte, 0x07);
         }
+        cursor_update();
 
         Ok(())
     }
+}
+
+pub fn cursor_enable() {
+	unsafe {
+		CURSOR_STATE = true;
+
+		port_io::outb(CURSOR_LOW_PORT, 0x0F);
+		port_io::outb(CURSOR_HIGH_PORT, (port_io::inb(CURSOR_HIGH_PORT & 2) | 0x0D));
+		port_io::outb(CURSOR_LOW_PORT, 0x0B);
+		port_io::outb(CURSOR_HIGH_PORT, (port_io::inb(0x3E0 & 0xE0) | 8));
+
+		cursor_update();
+	}
+}
+
+pub fn cursor_disable() {
+	unsafe {
+		CURSOR_STATE = false;
+
+		port_io::outb(CURSOR_LOW_PORT, 0x0F);
+		port_io::outb(CURSOR_HIGH_PORT, 0x20);
+	}
+}
+
+fn cursor_update() {
+	unsafe {
+		if CURSOR_STATE {
+				let pos: u16 = (VGA_ROW * VGA_W + VGA_COL) as u16; 
+
+				port_io::outb(0x3D4, 0x0F);
+				port_io::outb(0x3D5, (pos & 0xFF) as u8);
+				port_io::outb(0x3D4, 0x0E);
+				port_io::outb(0x3D5, ((pos >> 8) & 0xFF) as u8);
+		}
+	}
 }

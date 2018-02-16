@@ -4,15 +4,19 @@
 ;makes sure all correct information is preserved and restored, and the
 ;interrupt is passed to the right handler
 
+global isr_default
+
+;exceptions
 global divide_by_zero_wrapper
 global breakpoint_wrapper
-global isr_default
+
+;interrupts
+global keyboard_wrapper
 
 section .text
 bits 64
   ;define a macro for pushing registers onto stack
   %macro PUSH_ALL 0
-    mov rdi, rsp
     push rax
     push rbx
     push rcx
@@ -50,7 +54,19 @@ bits 64
   %endmacro
 
   align 4
+  isr_default:
+    mov rdi, rsp
+    PUSH_ALL
+
+    extern isr_default_handler
+    call isr_default_handler
+
+    POP_ALL
+    iretq
+
+  align 4
   divide_by_zero_wrapper:
+    mov rdi, rsp
     PUSH_ALL
 
     extern divide_by_zero_handler
@@ -61,6 +77,7 @@ bits 64
 
   align 4
   breakpoint_wrapper:
+    mov rdi, rsp
     PUSH_ALL
 
     extern breakpoint_handler
@@ -70,11 +87,11 @@ bits 64
     iretq
 
   align 4
-  isr_default:
+  keyboard_wrapper:
     PUSH_ALL
 
-    extern isr_default_handler
-    call isr_default_handler
+    extern keyboard_handler
+    call keyboard_handler
 
     POP_ALL
     iretq

@@ -2,9 +2,11 @@
 
 // contains methods that enable the user to perform keyboard input
 use arch::port_io;
+use driver::vga::Writer;
+use core::fmt::Write;
 
 // PS2 port number
-const PS2: u16 = 0x64;
+const PS2: u16 = 0x60;
 
 // Keyboard state modifiers
 enum MOD {
@@ -56,7 +58,7 @@ fn get_code() -> u8 {
 }
 
 pub fn get_char() -> Option<char> {
-	let mut code: u8 = get_code() - 1;
+	let mut code: u8 = get_code();
 
 	if (code as usize) < KEYS_EN_US.len() && code > 0 {
 		return Some(KEYS_EN_US[code as usize] as char);

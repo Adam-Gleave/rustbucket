@@ -13,8 +13,13 @@ const IDT_LENGTH: usize = 256;
 
 extern "C" {
     fn isr_default();
+    
+    // Exceptions
     fn divide_by_zero_wrapper();
     fn breakpoint_wrapper();
+
+    // Interrupts
+    fn keyboard_wrapper();
 }
 
 //contains the structure of an idt entry
@@ -74,8 +79,22 @@ lazy_static! {
         
         // Exceptions
         idt.set_handler(0, divide_by_zero_wrapper as u64);
-        idt.set_handler(1, isr_default as u64);
+        idt.set_handler(1, isr_default as u64); // Debug
         idt.set_handler(3, breakpoint_wrapper as u64);
+        idt.set_handler(4, isr_default as u64); // Overflow
+        idt.set_handler(5, isr_default as u64); // Bounds
+        idt.set_handler(6, isr_default as u64); // Invalid opcode
+        idt.set_handler(7, isr_default as u64); // Device not available
+        // ERROR CODE EXCEPTIONS HERE
+        idt.set_handler(16, isr_default as u64); // x87 floating point
+        // ERROR CODE EXCEPTIONS HERE
+        idt.set_handler(18, isr_default as u64); // Machine check
+        idt.set_handler(19, isr_default as u64); // SIMD floating point
+        idt.set_handler(20, isr_default as u64); // Virtualisation fault
+        idt.set_handler(30, isr_default as u64); // Security exception
+
+        // Interrupts
+        idt.set_handler(33, keyboard_wrapper as u64);
 
         idt
     };

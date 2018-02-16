@@ -22,9 +22,7 @@ extern crate lazy_static;
 mod driver;
 mod arch;
 
-use driver::vga::print;
-use driver::vga::println;
-use driver::vga::clear_term;
+use driver::vga;
 use arch::x86_64::gdt::gdt_init;
 use arch::x86_64::idt::idt_init;
 use arch::pic::pic_init;
@@ -39,18 +37,18 @@ extern fn eh_personality() {}
 #[no_mangle]
 // ensure the function does not return
 pub extern fn panic_fmt() -> ! {
-	println("Unhandled interrupt! System panic!");
+	vga::println("Unhandled interrupt! System panic!");
     loop{}
 }
 
 // main kernel function
 #[no_mangle] //disable name mangling (func can be accessed from asm files)
 pub extern fn kernel_main() {
-	clear_term();
+	vga::clear_term();
 
-  	print("Welcome to the ", 0x07);
-  	print("rustbucket", 0x06);
-  	println(" kernel!\nStarting boot procedure...");
+  	vga::print("Welcome to the ", 0x07);
+  	vga::print("rustbucket", 0x06);
+  	vga::println(" kernel!\nStarting boot procedure...");
 
 	//initialise system
 	gdt_init(); //set up GDT (global descriptor table)
@@ -58,15 +56,15 @@ pub extern fn kernel_main() {
 	pic_init(); //set up PIC (programmable interrupt controller)
 	
 	isr::enable();
-	println("Enabled interrupts.\n");
+	vga::println("Enabled interrupts.\n");
 
-	bochs_break();
     unsafe {
         asm!("int3");
     }
 
     bochs_break();
-    println("Returned from exception!");
+    vga::println("Returned from exception!\n");
+    vga::cursor_enable();
 
 	loop {}
 
