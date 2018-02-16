@@ -133,9 +133,9 @@ pub fn cursor_enable() {
 		CURSOR_STATE = true;
 
 		port_io::outb(CURSOR_LOW_PORT, 0x0F);
-		port_io::outb(CURSOR_HIGH_PORT, (port_io::inb(CURSOR_HIGH_PORT & 2) | 0x0D));
+		port_io::outb(CURSOR_HIGH_PORT, (port_io::inb(CURSOR_HIGH_PORT & 0xC0) | 0x0D));
 		port_io::outb(CURSOR_LOW_PORT, 0x0B);
-		port_io::outb(CURSOR_HIGH_PORT, (port_io::inb(0x3E0 & 0xE0) | 8));
+		port_io::outb(CURSOR_HIGH_PORT, (port_io::inb(0x3E0 & 0xE0) | 0x0E));
 
 		cursor_update();
 	}

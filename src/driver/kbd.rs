@@ -18,51 +18,36 @@ enum MOD {
 // Modifier table
 static MODIFIERS: [bool; 3] = [false, false, false];
 
-// Lookup table, en-us
-// TODO: FIX TABLE
-static KEYS_EN_US: [u8; 79] = [
-    0, 27,
-    '1' as u8, '2' as u8, '3' as u8, '4' as u8, '5' as u8, '6' as u8, '7' as u8, '8' as u8, /* 9 */
-    '9' as u8, '0' as u8, '-' as u8, '=' as u8, 8, /* Backspace */
-    '\t' as u8,         /* Tab */
-    'q' as u8, 'w' as u8, 'e' as u8, 'r' as u8,   /* 19 */
-    't' as u8, 'y' as u8, 'u' as u8, 'i' as u8, 'o' as u8, 'p' as u8, '[' as u8, ']' as u8, '\n' as u8, /* Enter key */
-    0,          /* 29   - Control */
-    'a' as u8, 's' as u8, 'd' as u8, 'f' as u8, 'g' as u8, 'h' as u8, 'j' as u8, 'k' as u8, 'l' as u8, ';' as u8, /* 39 */
-    '\'' as u8, '`' as u8,   0,        /* Left shift */
-    '\\' as u8, 'z' as u8, 'x' as u8, 'c' as u8, 'v' as u8, 'b' as u8, 'n' as u8,            /* 49 */
-    'm' as u8, ',' as u8, '.' as u8, '/' as u8,   0,              /* Right shift */
-    '*' as u8,
-    0,  /* Alt */
-    ' ' as u8,  /* Space bar */
-    0,  /* Caps lock */
-    0,  /* 59 - F1 key ... > */
-    0,   0,   0,   0,   0,   0,   0,   0,
-    0,  /* < ... F10 */
-    0,  /* 69 - Num lock*/
-    0,  /* Scroll Lock */
-    0,  /* Home key */
-    0,  /* Up Arrow */
-    0,  /* Page Up */
-    '-' as u8,
-    0,  /* Left Arrow */
-    0,
-    0,  /* Right Arrow */
-	'+' as u8,
-];
-
-fn get_code() -> u8 {
-	unsafe {
-		return port_io::inb(PS2);
-	}
-}
-
+// Scancode set 1 (my keyboard uses this)
 pub fn get_char() -> Option<char> {
-	let mut code: u8 = get_code();
+	let mut code: u8 = 0;
+	code = unsafe { port_io::inb(PS2) };
 
-	if (code as usize) < KEYS_EN_US.len() && code > 0 {
-		return Some(KEYS_EN_US[code as usize] as char);
-	}
+    let result = match code {
+        // Alphanumeric
+        0x1E => 'a', 0x30 => 'b', 0x2E => 'c', 0x20 => 'd', 0x12 => 'e',
+        0x21 => 'f', 0x22 => 'g', 0x23 => 'h', 0x17 => 'i', 0x24 => 'j',
+        0x25 => 'k', 0x26 => 'l', 0x32 => 'm', 0x31 => 'n', 0x18 => 'o',
+        0x19 => 'p', 0x10 => 'q', 0x13 => 'r', 0x1F => 's', 0x14 => 't',
+        0x16 => 'u', 0x2F => 'v', 0x11 => 'w', 0x2D => 'x', 0x15 => 'y',
+        0x2C => 'z', 0x0B => '0', 0x02 => '1', 0x03 => '2', 0x04 => '3',
+        0x05 => '4', 0x06 => '5', 0x07 => '6', 0x08 => '7', 0x09 => '8',
+        0x0A => '9',
 
-	return None;
+        // Symbols
+        0x29 => '`', 0x0C => '-', 0x0D => '=', 0x2B => '\\', 0x1A => '[',
+        0x1B => ']', 0x27 => ';', 0x28 => '\'', 0x33 => ',', 0x34 => '.',
+        0x35 => '/',
+
+        // Keypad
+        0x37 => '*', 0x4A => '-', 0x4E => '+', 0x53 => '.',
+
+        // Others
+        0x39 => ' ',
+
+        // Undefined
+        _ => return None,
+    };
+
+    Some(result)
 }

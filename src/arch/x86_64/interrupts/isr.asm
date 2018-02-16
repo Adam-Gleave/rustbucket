@@ -4,7 +4,9 @@
 ;makes sure all correct information is preserved and restored, and the
 ;interrupt is passed to the right handler
 
+;default handlers
 global isr_default
+global isr_default_err
 
 ;exceptions
 global divide_by_zero_wrapper
@@ -60,6 +62,17 @@ bits 64
 
     extern isr_default_handler
     call isr_default_handler
+
+    POP_ALL
+    iretq
+
+  isr_default_err:
+    pop rsi
+    mov rdi, rsp
+    PUSH_ALL
+
+    extern isr_default_err_handler
+    call isr_default_err_handler
 
     POP_ALL
     iretq

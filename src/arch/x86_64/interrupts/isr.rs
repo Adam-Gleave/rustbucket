@@ -35,6 +35,16 @@ pub extern fn isr_default_handler(frame: &InterruptFrame) {
     loop {}
 }
 
+#[no_mangle]
+#[linkage = "external"]
+pub extern fn isr_default_err_handler(frame: &InterruptFrame) {
+	let frame = unsafe { &*frame };
+	write!(Writer::new(), "EXCEPTION: UNHANDLED EXCEPTION at instruction {:X}\n{:#?}\n\n",
+		frame.instruction_pointer, frame);
+
+	loop {}
+}
+
 // Vector 0
 #[no_mangle]
 #[linkage = "external"]
@@ -66,6 +76,7 @@ pub extern fn keyboard_handler() {
 
 	match c {
 		Some(res) => print_char(res, 0x07),
+		// Do nothing if NONE returned
 		None => {}
 	}
 }
