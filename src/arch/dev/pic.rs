@@ -1,9 +1,8 @@
 //pic.rs
-
 //contains methods to configure the PIC, ready for interrupts
 //also contains means to communicate with the PIC one it has been initialised
 
-use arch::port_io;
+use arch::dev::port_io;
 use driver::vga;
 
 //define constants (port numbers)
@@ -39,8 +38,7 @@ const OCW3_ISR: u8 = 0x0b;
 const PIC_OFFSET_MASTER: u8 = 32; //offset the PIC indexes by 32
 const PIC_OFFSET_SLAVE: u8 = PIC_OFFSET_MASTER + 8;
 
-#[no_mangle]
-pub fn pic_init() {
+pub fn init() {
     unsafe {
         //start the initialisation of the PICs
         port_io::outb(PIC_MASTER_COMMAND, ICW1_INIT | ICW1_ICW4);
@@ -96,8 +94,8 @@ pub fn ack(irq: u8) {
 //mask or unmask a specific irq in the PIC
 pub fn irq_set_mask(mut irq: u8, enable: bool) {
     unsafe {
-        let mut port: u16 = 0;
-        let mut value: u8 = 0;
+        let port;
+        let value;
 
         //determine port (PIC) to alter masks at
         if irq < 8 {

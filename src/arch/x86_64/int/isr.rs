@@ -1,46 +1,29 @@
 //isr.rs
-
 //defines methods for interrupts
 
-use arch::pic;
+use arch::dev::pic;
 use driver::vga::Writer;
 use driver::vga::print_char;
 use driver::kbd::get_char;
 use core::fmt::Write;
 use arch::x86_64::idt::InterruptFrame;
 
-#[naked]
-#[inline(always)]
-pub fn enable() {
-    unsafe {
-        asm!("sti");
-    }
-}
-
-#[naked]
-#[inline(always)]
-pub fn disable() {
-    unsafe {
-        asm!("cli");
-    }
-}
-
 #[no_mangle]
 #[linkage = "external"]
-pub extern fn isr_default_handler(frame: &InterruptFrame) {
-    let frame = unsafe { &*frame };
+pub extern fn isr_default_handler(frame: &InterruptFrame) -> ! {
+    let frame = &*frame;
     write!(Writer::new(), "EXCEPTION: UNHANDLED EXCEPTION at instruction {:#X}\n{:#?}\n\n",
-        frame.instruction_pointer, frame);
+        frame.instruction_pointer, frame).expect("Unexpected failure in write!()");
 
     loop {}
 }
 
 #[no_mangle]
 #[linkage = "external"]
-pub extern fn isr_default_err_handler(frame: &InterruptFrame) {
-	let frame = unsafe { &*frame };
+pub extern fn isr_default_err_handler(frame: &InterruptFrame) -> ! {
+	let frame = &*frame;
 	write!(Writer::new(), "EXCEPTION: UNHANDLED EXCEPTION at instruction {:X}\n{:#?}\n\n",
-		frame.instruction_pointer, frame);
+		frame.instruction_pointer, frame).expect("Unexpected failure in write!()");
 
 	loop {}
 }
@@ -48,10 +31,10 @@ pub extern fn isr_default_err_handler(frame: &InterruptFrame) {
 // Vector 0
 #[no_mangle]
 #[linkage = "external"]
-pub extern fn divide_by_zero_handler(frame: &InterruptFrame) {
-    let frame = unsafe { &*frame };
+pub extern fn divide_by_zero_handler(frame: &InterruptFrame) -> ! {
+    let frame = &*frame ;
     write!(Writer::new(), "EXCEPTION: DIVIDE BY ZERO at instruction {:#X}\n{:#?}\n\n",
-        frame.instruction_pointer, frame);
+        frame.instruction_pointer, frame).expect("Unexpected failure in write!()");
 
     loop {}
 }
@@ -60,11 +43,9 @@ pub extern fn divide_by_zero_handler(frame: &InterruptFrame) {
 #[no_mangle]
 #[linkage = "external"]
 pub extern fn breakpoint_handler(frame: &InterruptFrame) {
-    let frame = unsafe { &*frame };
+    let frame = &*frame;
     write!(Writer::new(), "EXCEPTION: BREAK POINT at instruction {:#X}\n{:#?}\n\n",
-        frame.instruction_pointer, frame);
-
-    return;
+        frame.instruction_pointer, frame).expect("Unexpected failure in write!()");
 }
 
 // Vector 33

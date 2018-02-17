@@ -1,12 +1,10 @@
 //gdt.rs
-
 //defines and provides methods for the Global Descriptor Table, for use in long mode.
 //a table has already been defined for protected mode, in boot.asm
 
 use core::mem::size_of;
 use driver::vga::Writer;
 use core::fmt::Write;
-use bochs_break;
 
 const GDT_LENGTH: usize = 3;
 
@@ -41,7 +39,7 @@ enum AccessFlags {
 //various binary flags that appear in the granularity field of a gdt entry
 enum GranularityFlags {
     Page = 0b1000,
-    LongMode_64 = 0b0010
+    LongMode64 = 0b0010
 }
 
 //contains the pointer to the gdt that must be passed to assembly
@@ -82,7 +80,7 @@ lazy_static! {
         //set granularity flags, indicate a 64-bit table
         let granularity_flags: u8 =
             GranularityFlags::Page as u8 |
-            GranularityFlags::LongMode_64 as u8;
+            GranularityFlags::LongMode64 as u8;
 
         gdt.set_entry(0, GdtEntry::set_up(0, 0, 0, 0));
         gdt.set_entry(1, GdtEntry::set_up(0, 0xFFFFF, code_flags, granularity_flags));
@@ -105,7 +103,6 @@ impl Gdt {
         let mut ptr = GdtPointer::new();
         ptr.limit = (GDT_LENGTH as u16 * size_of::<GdtEntry>() as u16) - 1;
         ptr.base = self as *const _ as u64;
-        let location: u64 = ptr.base;
 
         unsafe {
             asm!("lgdt ($0)
@@ -118,7 +115,8 @@ impl Gdt {
                 :: "r" (&ptr) : "memory");
         }
 
-        write!(Writer::new(), "\nSuccess! Created 64-bit GDT at address 0x{:X}\n", location);
+        write!(Writer::new(), "\nSuccess! Created 64-bit GDT at address 0x{:X}\n", ptr.base)
+            .expect("Unexpected failure in write!()");;
     }
 }
 
@@ -155,6 +153,6 @@ impl GdtEntry {
     }
 }
 
-pub fn gdt_init() {
+pub fn init() {
     GDT.install();
 }

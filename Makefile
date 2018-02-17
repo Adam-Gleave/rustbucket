@@ -11,9 +11,9 @@ assembly_boot_files := $(wildcard src/arch/$(arch)/boot/*.asm)
 assembly_boot_o_files := $(patsubst src/arch/$(arch)/boot/%.asm, \
   build/arch/$(arch)/boot/%.o, $(assembly_boot_files))
 
-assembly_int_files := $(wildcard src/arch/$(arch)/interrupts/*.asm)
-assembly_int_o_files := $(patsubst src/arch/$(arch)/interrupts/%.asm, \
-  build/arch/$(arch)/interrupts/%.o, $(assembly_int_files))
+assembly_int_files := $(wildcard src/arch/$(arch)/int/*.asm)
+assembly_int_o_files := $(patsubst src/arch/$(arch)/int/%.asm, \
+  build/arch/$(arch)/int/%.o, $(assembly_int_files))
 
 .PHONY: all clean run iso kernel
 
@@ -46,6 +46,6 @@ build/arch/$(arch)/boot/%.o: src/arch/$(arch)/boot/%.asm
 	@mkdir -p $(shell dirname $@)
 	@nasm -f elf64 $< -o $@
 
-build/arch/$(arch)/interrupts/%.o: src/arch/$(arch)/interrupts/%.asm
+build/arch/$(arch)/int/%.o: src/arch/$(arch)/int/%.asm
 	@mkdir -p $(shell dirname $@)
 	@nasm -f elf64 $< -o $@

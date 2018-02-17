@@ -1,13 +1,9 @@
 //idt.rs
-
 //defines the Interrupt Descriptor Table, for use in long mode.
 
 use core::mem::size_of;
-use arch::pic;
 use driver::vga::Writer;
 use core::fmt::Write;
-use core::intrinsics::unreachable;
-use bochs_break;
 
 const IDT_LENGTH: usize = 256;
 
@@ -124,13 +120,13 @@ impl Idt {
         let mut ptr = IdtPointer::new();
         ptr.limit = (IDT_LENGTH as u16 * size_of::<IdtEntry>() as u16) - 1;
         ptr.base = self as *const _ as u64;
-        let location: u64 = ptr.base;
 
         unsafe {
             asm!("lidt ($0)" :: "r" (&ptr) : "memory");
         }
 
-        write!(Writer::new(), "Success! Created 64-bit IDT at address 0x{:X}\n", ptr.base);
+        write!(Writer::new(), "Success! Created 64-bit IDT at address 0x{:X}\n", ptr.base)
+            .expect("Unexpected failure in write!()");;
     }
 }
 
@@ -175,8 +171,6 @@ pub struct InterruptFrame {
 }
 
 // Initialise IDT
-pub fn idt_init() {
-    unsafe {
-        IDT.install();
-    }
+pub fn init() {
+    IDT.install();
 }
