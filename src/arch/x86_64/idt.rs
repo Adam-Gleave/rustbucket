@@ -7,17 +7,60 @@ use core::fmt::Write;
 
 const IDT_LENGTH: usize = 256;
 
-extern "C" {
-    // Default handlers
-    fn isr_default();
-    fn isr_default_err();
-    
-    // Exceptions
-    fn divide_by_zero_wrapper();
-    fn breakpoint_wrapper();
+//various binary flags that represent entry attributes
+enum EntryFlags {
+    Present = 0b10000000,
+    //flags to determine gate type
+    TaskGate = 0b0101,
+    InterruptGate = 0b1110,
+    TrapGate = 0b1111,
+    StorageSeg = 0b10000,
+    //flags to determine ring (protection) level
+    Ring0 = 0b0000000,
+    Ring1 = 0b0100000,
+    Ring2 = 0b1000000,
+    Ring3 = 0b1100000
+}
 
-    // Interrupts
-    fn keyboard_wrapper();
+pub struct Idt([IdtEntry; 256]);
+
+impl Idt {
+    pub fn new() -> Idt {
+        Idt([IdtEntry::missing(); 256])
+    }
+
+    pub fn set_handler(&mut self, vector: u8, func: u64) {
+        self.0[vector as usize] = IdtEntry::new(func);
+    }
+
+    pub fn install(&'static self) {
+        let mut ptr = IdtPointer::new();
+        ptr.limit = (IDT_LENGTH as u16 * size_of::<IdtEntry>() as u16) - 1;
+        ptr.base = self as *const _ as u64;
+
+        unsafe {
+            asm!("lidt ($0)" :: "r" (&ptr) : "memory");
+        }
+
+        write!(Writer::new(), "Success! Created 64-bit IDT at address 0x{:X}\n", ptr.base)
+            .expect("Unexpected failure in write!()");;
+    }
+}
+
+//contains the pointer to the gdt that must be passed to assembly
+#[repr(C, packed)]
+pub struct IdtPointer {
+    pub limit: u16,
+    pub base: u64
+}
+
+impl IdtPointer {
+    pub fn new() -> IdtPointer {
+        IdtPointer {
+            limit: 0,
+            base: 0
+        }
+    }
 }
 
 //contains the structure of an idt entry
@@ -36,102 +79,7 @@ pub struct IdtEntry {
     zero2: u32
 }
 
-//various binary flags that represent entry attributes
-enum EntryFlags {
-    Present = 0b10000000,
-    //flags to determine gate type
-    TaskGate = 0b0101,
-    InterruptGate = 0b1110,
-    TrapGate = 0b1111,
-    StorageSeg = 0b10000,
-    //flags to determine ring (protection) level
-    Ring0 = 0b0000000,
-    Ring1 = 0b0100000,
-    Ring2 = 0b1000000,
-    Ring3 = 0b1100000
-}
-
-//contains the pointer to the gdt that must be passed to assembly
-#[repr(C, packed)]
-pub struct IdtPointer {
-    pub limit: u16,
-    pub base: u64
-}
-
-//set a static variable containing the IDT pointer
-//we use a static variable, since we can find its location in memory with "VAR".as_ptr()
-impl IdtPointer {
-    pub fn new() -> IdtPointer {
-        IdtPointer {
-            limit: 0,
-            base: 0
-        }
-    }
-}
-
-pub struct Idt([IdtEntry; 256]);
-
-lazy_static! {
-    static ref IDT: Idt = {
-        let mut idt = Idt::new();
-        
-        // Exceptions
-        idt.set_handler(0, divide_by_zero_wrapper as u64);
-        idt.set_handler(1, isr_default as u64); // Debug
-        idt.set_handler(3, breakpoint_wrapper as u64);
-        idt.set_handler(4, isr_default as u64); // Overflow
-        idt.set_handler(5, isr_default as u64); // Bounds TODO
-        idt.set_handler(6, isr_default as u64); // Invalid opcode TODO
-        idt.set_handler(7, isr_default as u64); // Device not available
-        idt.set_handler(8, isr_default_err as u64); // Double fault TODO
-        idt.set_handler(10, isr_default_err as u64); // Invalid TSS
-        idt.set_handler(11, isr_default_err as u64); // Segment not present
-        idt.set_handler(12, isr_default_err as u64); // Stack segment fault
-        idt.set_handler(13, isr_default_err as u64); // GPF TODO
-        idt.set_handler(14, isr_default_err as u64); // Page fault TODO
-        idt.set_handler(16, isr_default as u64); // x87 floating point
-        idt.set_handler(17, isr_default_err as u64); // Alignment check
-        idt.set_handler(18, isr_default as u64); // Machine check
-        idt.set_handler(19, isr_default as u64); // SIMD floating point
-        idt.set_handler(20, isr_default as u64); // Virtualisation fault
-        idt.set_handler(30, isr_default_err as u64); // Security exception
-
-        // Interrupts
-        idt.set_handler(33, keyboard_wrapper as u64);
-
-        idt
-    };
-}
-
-impl Idt {
-    pub fn new() -> Idt {
-        Idt([IdtEntry::missing(); 256])
-    }
-
-    pub fn set_handler(&mut self, vector: u8, func: u64) {
-        self.0[vector as usize] = IdtEntry::new(func);
-    }
-
-    // pub fn set_handler_with_err(&mut self, vector: u8, func: HandlerErrFunc) {
-    //     self.0[vector as usize] = IdtEntry::new(func as u64);
-    // }
-
-    pub fn install(&'static self) {
-        let mut ptr = IdtPointer::new();
-        ptr.limit = (IDT_LENGTH as u16 * size_of::<IdtEntry>() as u16) - 1;
-        ptr.base = self as *const _ as u64;
-
-        unsafe {
-            asm!("lidt ($0)" :: "r" (&ptr) : "memory");
-        }
-
-        write!(Writer::new(), "Success! Created 64-bit IDT at address 0x{:X}\n", ptr.base)
-            .expect("Unexpected failure in write!()");;
-    }
-}
-
 impl IdtEntry {
-    //constructor, since Rust does not support forward declaration
     pub const fn missing() -> IdtEntry {
         IdtEntry {
             base_low: 0,
@@ -158,19 +106,4 @@ impl IdtEntry {
             flags: EntryFlags::InterruptGate as u8 | EntryFlags::Present as u8
         }
     }
-}
-
-#[derive(Debug)]
-#[repr(C)]
-pub struct InterruptFrame {
-    pub instruction_pointer: u64,
-    code_segment: u64,
-    cpu_flags: u64,
-    stack_pointer: u64,
-    stack_segment: u64
-}
-
-// Initialise IDT
-pub fn init() {
-    IDT.install();
 }

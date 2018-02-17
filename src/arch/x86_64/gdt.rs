@@ -8,26 +8,9 @@ use core::fmt::Write;
 
 const GDT_LENGTH: usize = 3;
 
-//contains the structure of a gdt entry
-#[derive(Copy, Clone, Debug)]
-#[repr(C, packed)]
-pub struct GdtEntry {
-    //limit: size of entry
-    limit_low: u16,
-    //base: offset in memory of entry
-    base_low: u16,
-    base_middle: u8,
-    //determine the access level of the segment
-    access: u8,
-    //determine the granularity of the segment
-    //rest of limit stored in granularity byte
-    granularity: u8,
-    base_high: u8
-}
-
 //various binary flags that appear in the access field of a gdt entry
 //they determine the properties of the entry, and how data is manipulated/accessed
-enum AccessFlags {
+pub enum AccessFlags {
     //for code, indicate it is readable
     //for data, indicate it is writable
     ReadWrite = 0b00000010,
@@ -37,58 +20,12 @@ enum AccessFlags {
 }
 
 //various binary flags that appear in the granularity field of a gdt entry
-enum GranularityFlags {
+pub enum GranularityFlags {
     Page = 0b1000,
     LongMode64 = 0b0010
 }
 
-//contains the pointer to the gdt that must be passed to assembly
-#[repr(C, packed)]
-pub struct GdtPointer {
-    pub limit: u16,
-    pub base: u64
-}
-
-//set a static variable containing the GDT pointer
-//we use a static variable, since we can find its location in memory with "VAR".as_ptr()
-impl GdtPointer {
-    pub fn new() -> GdtPointer {
-        GdtPointer {
-            limit: 0,
-            base: 0
-        }
-    }
-}
-
 pub struct Gdt([GdtEntry; 3]);
-
-lazy_static! {
-    static ref GDT: Gdt = {
-        let mut gdt = Gdt::new();
-
-        //set access flags for code segments
-        let code_flags: u8 =
-            AccessFlags::ReadWrite as u8 |
-            AccessFlags::Executable as u8 |
-            AccessFlags::One as u8 |
-            AccessFlags::Present as u8;
-        //set access flags for data segments
-        let data_flags: u8 =
-            AccessFlags::ReadWrite as u8 |
-            AccessFlags::One as u8 |
-            AccessFlags::Present as u8;
-        //set granularity flags, indicate a 64-bit table
-        let granularity_flags: u8 =
-            GranularityFlags::Page as u8 |
-            GranularityFlags::LongMode64 as u8;
-
-        gdt.set_entry(0, GdtEntry::set_up(0, 0, 0, 0));
-        gdt.set_entry(1, GdtEntry::set_up(0, 0xFFFFF, code_flags, granularity_flags));
-        gdt.set_entry(2, GdtEntry::set_up(0, 0xFFFFF, data_flags, granularity_flags));
-
-        gdt
-    };
-}
 
 impl Gdt {
     pub fn new() -> Gdt {
@@ -120,8 +57,24 @@ impl Gdt {
     }
 }
 
+//contains the structure of a gdt entry
+#[derive(Copy, Clone, Debug)]
+#[repr(C, packed)]
+pub struct GdtEntry {
+    //limit: size of entry
+    limit_low: u16,
+    //base: offset in memory of entry
+    base_low: u16,
+    base_middle: u8,
+    //determine the access level of the segment
+    access: u8,
+    //determine the granularity of the segment
+    //rest of limit stored in granularity byte
+    granularity: u8,
+    base_high: u8
+}
+
 impl GdtEntry {
-    //constructor, since Rust does not support forward declaration
     pub const fn missing() -> GdtEntry {
         GdtEntry {
             base_low: 0,
@@ -153,6 +106,18 @@ impl GdtEntry {
     }
 }
 
-pub fn init() {
-    GDT.install();
+//contains the pointer to the gdt that must be passed to assembly
+#[repr(C, packed)]
+pub struct GdtPointer {
+    pub limit: u16,
+    pub base: u64
+}
+
+impl GdtPointer {
+    pub fn new() -> GdtPointer {
+        GdtPointer {
+            limit: 0,
+            base: 0
+        }
+    }
 }

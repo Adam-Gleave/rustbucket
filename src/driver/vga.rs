@@ -5,7 +5,7 @@
 use core::fmt;
 
 static mut VGA_COL: u32 = 0;
-static mut VGA_ROW: u32 = 0;
+static mut VGA_ROW: i32 = 0;
 const VGA_W: u32 = 80;
 const VGA_H: u32 = 25;
 const VGA_BUFF: usize = 0xB8000;
@@ -24,6 +24,11 @@ pub fn print_char(c: char, color: u8) {
 
 pub fn print_byte(c: u8, color: u8) {
 	unsafe {
+		if VGA_ROW <= -1 {
+			clear_term();
+			VGA_ROW += 1;
+		}
+
 		match c {
 			b'\n' => {
 				VGA_COL = 0;
@@ -41,21 +46,21 @@ pub fn print_byte(c: u8, color: u8) {
 					VGA_COL -= 1
 				}
 
-				;print_char_at(b' ', VGA_COL, VGA_ROW, color);
+				;print_char_at(b' ', VGA_COL, VGA_ROW as u32, color);
 			},
 			_ => {
-				print_char_at(c, VGA_COL, VGA_ROW, color);
+				print_char_at(c, VGA_COL, VGA_ROW as u32, color);
 				VGA_COL += 1;
 			},
 		};
 
-		if VGA_COL >= VGA_W {
+		if VGA_COL as u32 >= VGA_W {
 			VGA_ROW += 1;
 			VGA_COL = 0;
+		}
 
-			if VGA_ROW >= VGA_H {
-				VGA_ROW = 0;
-			}
+		if VGA_ROW as u32 >= VGA_H {
+			VGA_ROW = -1;
 		}
 	}
 }
@@ -84,9 +89,7 @@ pub fn clear_term() {
 
 // Writer structure, used for write! macro
 // enables the use of string formatting for debugging mem addresses, etc
-pub struct Writer {
-
-}
+pub struct Writer {}
 
 impl Writer {
 	pub fn new() -> Writer {

@@ -11,9 +11,15 @@ global isr_default_err
 ;exceptions
 global divide_by_zero_wrapper
 global breakpoint_wrapper
+global opcode_wrapper
+global double_fault_wrapper
+global gpf_wrapper
+global page_fault_wrapper
 
 ;interrupts
+global pit_wrapper
 global keyboard_wrapper
+global isr_spurious
 
 section .text
 bits 64
@@ -59,20 +65,32 @@ bits 64
   isr_default:
     mov rdi, rsp
     PUSH_ALL
+    sub rsp, 8
 
     extern isr_default_handler
     call isr_default_handler
 
+    add rsp, 8
     POP_ALL
     iretq
 
+  align 4
   isr_default_err:
     pop rsi
     mov rdi, rsp
     PUSH_ALL
+    sub rsp, 8
 
     extern isr_default_err_handler
     call isr_default_err_handler
+
+    add rsp, 8
+    POP_ALL
+    iretq
+
+  align 4
+  isr_spurious:
+    PUSH_ALL
 
     POP_ALL
     iretq
@@ -80,21 +98,90 @@ bits 64
   align 4
   divide_by_zero_wrapper:
     mov rdi, rsp
+    sub rsp, 8
     PUSH_ALL
 
     extern divide_by_zero_handler
     call divide_by_zero_handler
 
+    add rsp, 8
     POP_ALL
     iretq
 
   align 4
   breakpoint_wrapper:
     mov rdi, rsp
+    sub rsp, 8
     PUSH_ALL
 
     extern breakpoint_handler
     call breakpoint_handler
+
+    add rsp, 8
+    POP_ALL
+    iretq
+
+  align 4
+  opcode_wrapper:
+    mov rdi, rsp
+    sub rsp, 8
+    PUSH_ALL
+
+    extern opcode_handler
+    call opcode_handler
+
+    add rsp, 8
+    POP_ALL
+    iretq
+
+  align 4
+  double_fault_wrapper:
+    pop rsi
+    mov rdi, rsp
+    sub rsp, 8
+    PUSH_ALL
+
+    extern double_fault_handler
+    call double_fault_handler
+
+    add rsp, 8
+    POP_ALL
+    iretq
+
+  align 4
+  gpf_wrapper:
+    pop rsi
+    mov rdi, rsp
+    sub rsp, 8
+    PUSH_ALL
+
+    extern gpf_handler
+    call gpf_handler
+
+    add rsp, 8
+    POP_ALL
+    iretq
+
+  align 4
+  page_fault_wrapper:
+    pop rsi
+    mov rdi, rsp
+    sub rsp, 8
+    PUSH_ALL
+
+    extern page_fault_handler
+    call page_fault_handler
+
+    add rsp, 8
+    POP_ALL
+    iretq
+
+  align 4
+  pit_wrapper:
+    PUSH_ALL
+
+    extern pit_handler
+    call pit_handler
 
     POP_ALL
     iretq

@@ -20,9 +20,11 @@ mod driver;
 mod arch;
 
 use driver::vga;
-use arch::dev::pic;
-use arch::x86_64::gdt;
-use arch::x86_64::idt;
+use arch::dev::pic_init;
+use arch::dev::pit_init;
+use arch::dev::pit;
+use arch::x86_64::gdt_init;
+use arch::x86_64::idt_init;
 use arch::x86_64::int::int;
 
 // called on system panic -- not implemented yet
@@ -37,24 +39,23 @@ pub extern fn panic_fmt() -> ! {
 }
 
 #[no_mangle]
-pub extern fn kernel_main() {
+pub extern fn kernel_main() -> ! {
 	vga::clear_term();
 
   	vga::print("Welcome to the ", 0x07);
   	vga::print("rustbucket", 0x06);
   	vga::println(" kernel!\nStarting boot procedure...");
 
-	gdt::init();
-	idt::init();
-	pic::init();
+	gdt_init();
+	idt_init();
+	pic_init();
+	pit_init(1000);
 	
 	int::enable();
 	vga::println("Enabled interrupts.\n");
 
-    unsafe { asm!("int3"); }
-
-    bochs_break();
-    vga::println("Returned from exception!\n");
+    pit::timer_wait(2000);
+    vga::println("Waited for 2000 milliseconds.");
 
 	loop {}
 
@@ -62,7 +63,6 @@ pub extern fn kernel_main() {
 	// ----
 	// - Add exception & hardware interrupt handlers to IDT
 	// - Allocate space for thread stacks
-	// - Enable PIT (or similar interrupt-driven timer) to preempt threads
 	// - Halt the CPU until the next timer interrupt occurs, thereby enabling multi-threading
 
 	// EXTRA
