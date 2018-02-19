@@ -18,14 +18,18 @@ extern crate lazy_static;
 
 mod driver;
 mod arch;
+mod multiboot2;
 
 use driver::vga;
+use driver::vga::Writer;
+use core::fmt::Write;
 use arch::dev::pic_init;
 use arch::dev::pit_init;
 use arch::dev::pit;
 use arch::x86_64::gdt_init;
 use arch::x86_64::idt_init;
 use arch::x86_64::int::int;
+use multiboot2::Multiboot2Info;
 
 // called on system panic -- not implemented yet
 #[lang = "eh_personality"]
@@ -39,12 +43,26 @@ pub extern fn panic_fmt() -> ! {
 }
 
 #[no_mangle]
-pub extern fn kernel_main() -> ! {
+pub extern fn kernel_main(mb_info_ptr: usize) -> ! {
+	let mb_info = unsafe { multiboot2::load(mb_info_ptr) };
+	let basic_mem = mb_info.get_basic_mem();
+
 	vga::clear_term();
 
   	vga::print("Welcome to the ", 0x07);
   	vga::print("rustbucket", 0x06);
   	vga::println(" kernel!\nStarting boot procedure...");
+
+  	match basic_mem {
+  		Some(res) => {
+		  	write!(Writer::new(), "\nMultiboot2 memory info tag:\nmem_lower: {:#X}\nmem_higher: {:#X}\n",
+		  		res.mem_lower, res.mem_upper).expect("Unexpected error in write!()");
+  		},
+  		None => {
+		  	write!(Writer::new(), "\nMultiboot2 memory info tag not found")
+		  		.expect("Unexpected error in write()!");
+  		}
+  	}
 
 	gdt_init();
 	idt_init();

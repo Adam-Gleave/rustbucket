@@ -11,6 +11,7 @@ section .text
 bits 32               ; 32 bit instructions (CPU in protected mode)
 start:
   mov esp, stack_top
+  mov edi, ebx        ; multiboot information
 
   ; check for incompatibility with processor
                         ; error codes if incompatible
