@@ -4,15 +4,15 @@ iso := build/os-$(arch).iso
 target ?= $(arch)-rustbucket_os
 rust_os := target/$(target)/debug/librustbucket_os.a
 
-linker_script := src/arch/$(arch)/linker.ld
-grub_cfg := src/arch/$(arch)/grub.cfg
+linker_script := kernel/arch/$(arch)/linker.ld
+grub_cfg := kernel/arch/$(arch)/grub.cfg
 
-assembly_boot_files := $(wildcard src/arch/$(arch)/boot/*.asm)
-assembly_boot_o_files := $(patsubst src/arch/$(arch)/boot/%.asm, \
+assembly_boot_files := $(wildcard kernel/arch/$(arch)/boot/*.asm)
+assembly_boot_o_files := $(patsubst kernel/arch/$(arch)/boot/%.asm, \
   build/arch/$(arch)/boot/%.o, $(assembly_boot_files))
 
-assembly_int_files := $(wildcard src/arch/$(arch)/int/*.asm)
-assembly_int_o_files := $(patsubst src/arch/$(arch)/int/%.asm, \
+assembly_int_files := $(wildcard kernel/arch/$(arch)/int/*.asm)
+assembly_int_o_files := $(patsubst kernel/arch/$(arch)/int/%.asm, \
   build/arch/$(arch)/int/%.o, $(assembly_int_files))
 
 .PHONY: all clean run iso kernel
@@ -42,10 +42,10 @@ kernel:
 	@xargo build --target $(target)
 
 # compile assembly files
-build/arch/$(arch)/boot/%.o: src/arch/$(arch)/boot/%.asm
+build/arch/$(arch)/boot/%.o: kernel/arch/$(arch)/boot/%.asm
 	@mkdir -p $(shell dirname $@)
 	@nasm -f elf64 $< -o $@
 
-build/arch/$(arch)/int/%.o: src/arch/$(arch)/int/%.asm
+build/arch/$(arch)/int/%.o: kernel/arch/$(arch)/int/%.asm
 	@mkdir -p $(shell dirname $@)
 	@nasm -f elf64 $< -o $@

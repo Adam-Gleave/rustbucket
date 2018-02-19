@@ -5,9 +5,11 @@ authors = ["Adam Gleave <adamg108@hotmail.co.uk>"]
 
 [lib]
 crate-type = ["staticlib"]
+path = "kernel/lib.rs"
 
 [dependencies]
 rlibc = "1.0"
+multiboot2 = { git = "https://github.com/Adam-Gleave/multiboot2-rs" }
 
 [dependencies.lazy_static]
 version = "0.2.1"

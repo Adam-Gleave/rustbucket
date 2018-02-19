@@ -1,0 +1,3 @@
+[submodule "multiboot2"]
+	path = multiboot2
+	url = https://github.com/Adam-Gleave/multiboot2-rs
