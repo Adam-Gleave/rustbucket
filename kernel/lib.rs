@@ -48,8 +48,16 @@ pub extern fn panic_fmt(fmt: core::fmt::Arguments, file: &'static str, line: u32
 #[no_mangle]
 pub extern fn kernel_main(mb_info_ptr: usize) -> ! {
 	let mb_info = unsafe { multiboot2::load(mb_info_ptr) };
-	let memory_map_tag = mb_info.get_mem_map()
-    	.expect("Memory map tag required!");
+
+	let elf_sections_tag = mb_info.get_elf_sections()
+		.expect("ELF sections tag required!");
+
+	let kernel_start = elf_sections_tag.get_sections().map(|s| s.get_start_addr())
+	    .min().unwrap();
+	let kernel_end = elf_sections_tag.get_sections().map(|s| s.get_start_addr() + s.get_size())
+	    .max().unwrap();
+	let multiboot_start = mb_info_ptr;
+	let multiboot_end = multiboot_start + (mb_info.total_size() as usize);
 
 	vga::clear_term();
 
@@ -57,8 +65,10 @@ pub extern fn kernel_main(mb_info_ptr: usize) -> ! {
   	vga::print("rustbucket", 0x06);
   	vga::println(" kernel!\nStarting boot procedure...");
 
-	write!(Writer::new(), "\n{:?}", memory_map_tag)
-		.expect("Unexpected error in write!()");
+    write!(Writer::new(), "\nKernel start: {:#X}, kernel end: {:#X}\n", 
+	kernel_start, kernel_end);
+    write!(Writer::new(), "Multiboot start: {:#X}, Multiboot end: {:#X}\n", 
+	multiboot_start, multiboot_end);
 
 	gdt_init();
 	idt_init();
@@ -67,9 +77,6 @@ pub extern fn kernel_main(mb_info_ptr: usize) -> ! {
 	
 	int::enable();
 	vga::println("Enabled interrupts.\n");
-
-    pit::timer_wait(2000);
-    vga::println("Waited for 2000 milliseconds.");
 
 	loop {}
 
