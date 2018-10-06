@@ -39,7 +39,7 @@ $(kernel): kernel $(rust_os) $(assembly_boot_o_files) $(assembly_int_o_files) $(
 	$(rust_os) --start-group $(assembly_int_o_files) $(assembly_boot_o_files) $(rust_os) --end-group 
 
 kernel:
-	@xargo build --target $(target)
+	@RUST_TARGET_PATH="$(pwd)" xargo build --target $(target)
 
 # compile assembly files
 build/arch/$(arch)/boot/%.o: kernel/arch/$(arch)/boot/%.asm

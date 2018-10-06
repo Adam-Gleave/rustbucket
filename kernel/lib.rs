@@ -4,10 +4,10 @@
 
 #![no_std]
 #![allow(dead_code)]
+#![feature(panic_implementation)]
+#![feature(core_intrinsics)]
 #![feature(lang_items)]
 #![feature(asm)]
-#![feature(repr_align)]
-#![feature(attr_literals)]
 #![feature(const_fn)]
 #![feature(naked_functions)]
 #![feature(abi_x86_interrupt)]
@@ -20,6 +20,8 @@ extern crate multiboot2;
 mod driver;
 mod arch;
 
+use core::intrinsics;
+use core::panic::PanicInfo;
 use driver::vga;
 use driver::vga::Writer;
 use core::fmt::Write;
@@ -34,13 +36,13 @@ use arch::x86_64::int::int;
 #[lang = "eh_personality"]
 extern fn eh_personality() {}
 
-#[lang = "panic_fmt"]
+#[panic_handler]
 #[no_mangle]
-pub extern fn panic_fmt(fmt: core::fmt::Arguments, file: &'static str, line: u32) -> ! {
-	write!(Writer::new(), "System PANIC at line {}, file \"{}\"", line, file)
+pub extern fn panic_fmt(_info: &PanicInfo) -> ! {
+	write!(Writer::new(), "System PANIC!")
 		.expect("Unexpected error in write!()");
-	write!(Writer::new(), "\t{}", fmt)
-		.expect("Unexpected error in write!()");
+	//write!(Writer::new(), "\t{}", fmt)
+	//	.expect("Unexpected error in write!()");
 
     loop{}
 }
