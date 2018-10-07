@@ -67,10 +67,12 @@ pub extern fn divide_by_zero_handler(frame: &InterruptFrame) -> ! {
 // Vector 1
 #[no_mangle]
 #[linkage = "external"]
-pub extern fn debug_handler(frame: &InterruptFrame) {
+pub extern fn debug_handler(frame: &InterruptFrame) -> ! {
     let frame = &*frame;
     write!(Writer::new(), "EXCEPTION: DEBUG at instruction {:#X}\n{:#?}\n\n",
         frame.instruction_pointer, frame).expect("Unexpected failure in write!()");
+
+    loop {}
 }
 
 // Vector 3
@@ -85,19 +87,23 @@ pub extern fn breakpoint_handler(frame: &InterruptFrame) {
 // Vector 4
 #[no_mangle]
 #[linkage = "external"]
-pub extern fn overflow_handler(frame: &InterruptFrame) {
+pub extern fn overflow_handler(frame: &InterruptFrame) -> ! {
     let frame = &*frame;
     write!(Writer::new(), "EXCEPTION: OVERFLOW at instruction {:#X}\n{:#?}\n\n",
         frame.instruction_pointer, frame).expect("Unexpected failure in write!()");
+
+    loop {}
 }
 
 // Vector 5
 #[no_mangle]
 #[linkage = "external"]
-pub extern fn bounds_handler(frame: &InterruptFrame) {
+pub extern fn bounds_handler(frame: &InterruptFrame) -> ! {
     let frame = &*frame;
     write!(Writer::new(), "EXCEPTION: OUT-OF-BOUNDS at instruction {:#X}\n{:#?}\n\n",
         frame.instruction_pointer, frame).expect("Unexpected failure in write!()");
+
+    loop {}
 }
 
 // Vector 6
@@ -111,7 +117,18 @@ pub extern fn opcode_handler(frame: &InterruptFrame) -> ! {
     loop {}
 }
 
-// Vector 13
+// Vector 7
+#[no_mangle]
+#[linkage = "external"]
+pub extern fn device_na_handler(frame: &InterruptFrame) -> ! {
+    let frame = &*frame;
+    write!(Writer::new(), "EXCEPTION: DEVICE NOT FOUND at instruction {:#X}\n{:#?}\n\n",
+        frame.instruction_pointer, frame).expect("Unexpected failure in write!()");
+
+    loop {}
+}
+
+// Vector 8
 #[no_mangle]
 #[linkage = "external"]
 pub extern fn double_fault_handler(frame: &InterruptFrame) -> ! {
@@ -152,6 +169,17 @@ pub extern fn page_fault_handler(frame: &InterruptFrame, code: u64) -> ! {
 
     write!(Writer::new(), "EXCEPTION: PAGE FAULT at instruction {:#X}, error: {:#}\n{:#?}\n\n",
         frame.instruction_pointer, code_str, frame).expect("Unexpected failure in write!()");
+
+    loop {}
+}
+
+// Vector 16
+#[no_mangle]
+#[linkage = "external"]
+pub extern fn x87_float_handler(frame: &InterruptFrame) -> ! {
+    let frame = &*frame;
+    write!(Writer::new(), "EXCEPTION: x87 FLOATING POINT at instruction {:#X}\n{:#?}\n\n",
+        frame.instruction_pointer, frame).expect("Unexpected failure in write!()");
 
     loop {}
 }

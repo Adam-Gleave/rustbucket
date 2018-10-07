@@ -40,11 +40,13 @@ pub fn pic_init() {
         pic::irq_set_mask(1, false);
     }
 
+    vga::okay();
     vga::println("Initialised the PIC, at an offset of 0x20");
 }
 
 pub fn pit_init(hz: u32) {
 	pit::set_phase(hz);
+        vga::okay();
 	write!(Writer::new(), "Initialised the PIT, at a phase of {:#} Hz\n", hz)
 		.expect("Unexpected failure in write!()");
 }

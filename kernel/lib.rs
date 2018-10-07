@@ -63,20 +63,23 @@ pub extern fn kernel_main(mb_info_ptr: usize) -> ! {
 
     vga::print("Welcome to the ", 0x07);
     vga::print("rustbucket", 0x06);
-    vga::println(" kernel!\nStarting boot procedure...");
+    vga::println(" kernel!\nStarting boot procedure...\n");
 
-    write!(Writer::new(), "\nKernel start: {:#X}, kernel end: {:#X}\n", 
+    vga::info();
+    write!(Writer::new(), "Kernel start: {:#X}, kernel end: {:#X}\n", 
 	kernel_start, kernel_end);
-    write!(Writer::new(), "Multiboot start: {:#X}, Multiboot end: {:#X}\n", 
-	multiboot_start, multiboot_end);
+    vga::info();
+    write!(Writer::new(), "Multiboot start: {:#X}, Multiboot end: {:#X}\n\n", multiboot_start, multiboot_end);
 
     gdt_init();
     idt_init();
     pic_init();
     pit_init(1000);
-	
+
+    // Enable interrupts
     int::enable();
-    vga::println("Enabled interrupts.\n");
+    vga::okay();
+    vga::println("Enabled interrupts\n");
 
     interrupt();
 

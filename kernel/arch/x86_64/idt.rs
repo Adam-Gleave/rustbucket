@@ -2,8 +2,9 @@
 //defines the Interrupt Descriptor Table, for use in long mode.
 
 use core::mem::size_of;
-use driver::vga::Writer;
 use core::fmt::Write;
+use driver::vga;
+use driver::vga::Writer;
 
 const IDT_LENGTH: usize = 256;
 
@@ -42,6 +43,7 @@ impl Idt {
             asm!("lidt ($0)" :: "r" (&ptr) : "memory");
         }
 
+        vga::okay();
         unsafe {
             write!(Writer::new(), "Success! Created 64-bit IDT at address 0x{:X}\n", ptr.base)
                 .expect("Unexpected failure in write!()");;

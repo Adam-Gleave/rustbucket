@@ -3,8 +3,9 @@
 //a table has already been defined for protected mode, in boot.asm
 
 use core::mem::size_of;
-use driver::vga::Writer;
 use core::fmt::Write;
+use driver::vga;
+use driver::vga::Writer;
 
 const GDT_LENGTH: usize = 3;
 
@@ -52,8 +53,9 @@ impl Gdt {
                 :: "r" (&ptr) : "memory");
         }
 
+        vga::okay();
         unsafe {
-            write!(Writer::new(), "\nSuccess! Created 64-bit GDT at address 0x{:X}\n", ptr.base)
+            write!(Writer::new(), "Success! Created 64-bit GDT at address 0x{:X}\n", ptr.base)
                 .expect("Unexpected failure in write!()");;
         }
     }

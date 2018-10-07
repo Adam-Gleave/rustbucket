@@ -15,8 +15,10 @@ global breakpoint_wrapper
 global overflow_wrapper
 global bounds_wrapper
 global opcode_wrapper
+global device_na_wrapper
 global double_fault_wrapper
 global gpf_wrapper
+global x87_float_wrapper
 global page_fault_wrapper
 
 ;interrupts
@@ -141,7 +143,7 @@ bits 64
   overflow_wrapper:
     mov rdi, rsp
     sub rsp, 8
-    PUSH_A
+    PUSH_ALL
 
     extern overflow_handler
     call overflow_handler
@@ -177,6 +179,19 @@ bits 64
     iretq
 
   align 4
+  device_na_wrapper:
+    mov rsi, rsp
+    sub rsp, 8
+    PUSH_ALL
+    
+    extern device_na_handler
+    call device_na_handler
+
+    add rsp, 8
+    POP_ALL
+    iretq
+
+  align 4
   double_fault_wrapper:
     pop rsi
     mov rdi, rsp
@@ -199,6 +214,19 @@ bits 64
 
     extern gpf_handler
     call gpf_handler
+
+    add rsp, 8
+    POP_ALL
+    iretq
+
+  align 4
+  x87_float_wrapper:
+    mov rdi, rsp
+    sub rsp, 8
+    PUSH_ALL
+
+    extern x87_float_handler
+    call x87_float_handler
 
     add rsp, 8
     POP_ALL
