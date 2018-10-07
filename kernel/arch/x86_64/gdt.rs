@@ -52,8 +52,10 @@ impl Gdt {
                 :: "r" (&ptr) : "memory");
         }
 
-        write!(Writer::new(), "\nSuccess! Created 64-bit GDT at address 0x{:X}\n", ptr.base)
-            .expect("Unexpected failure in write!()");;
+        unsafe {
+            write!(Writer::new(), "\nSuccess! Created 64-bit GDT at address 0x{:X}\n", ptr.base)
+                .expect("Unexpected failure in write!()");;
+        }
     }
 }
 

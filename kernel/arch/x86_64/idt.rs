@@ -42,8 +42,10 @@ impl Idt {
             asm!("lidt ($0)" :: "r" (&ptr) : "memory");
         }
 
-        write!(Writer::new(), "Success! Created 64-bit IDT at address 0x{:X}\n", ptr.base)
-            .expect("Unexpected failure in write!()");;
+        unsafe {
+            write!(Writer::new(), "Success! Created 64-bit IDT at address 0x{:X}\n", ptr.base)
+                .expect("Unexpected failure in write!()");;
+        }
     }
 }
 

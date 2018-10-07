@@ -27,7 +27,6 @@ use driver::vga::Writer;
 use core::fmt::Write;
 use arch::dev::pic_init;
 use arch::dev::pit_init;
-use arch::dev::pit;
 use arch::x86_64::gdt_init;
 use arch::x86_64::idt_init;
 use arch::x86_64::int::int;
