@@ -1,4 +1,6 @@
-![Imgur](https://i.imgur.com/xCYk9h7.png)
+<p align="center">
+  <img src="https://i.imgur.com/xCYk9h7.png" alt="rustbucket"/>
+</p>
 
 # rustbucket
 Tiny experimental kernel written in Rust and x86 assembly language. Purely for educational purposes. Inspiration take from [OSDev](http://wiki.osdev.org/Main_Page), [Philipp Oppermann](https://os.phil-opp.com/set-up-rust/), and [Bare Metal Rust](http://www.randomhacks.net/bare-metal-rust/).
