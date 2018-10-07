@@ -124,3 +124,10 @@ pub fn okay() {
     print("] ", 0x07);
 }
 
+// Startup error
+pub fn error() {
+    print_char('[', 0x07);
+    print(" ERROR ", 0x04);
+    print("] ", 0x07);
+}
+

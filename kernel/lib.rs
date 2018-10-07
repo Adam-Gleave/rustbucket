@@ -38,8 +38,10 @@ extern fn eh_personality() {}
 #[panic_handler]
 #[no_mangle]
 pub extern fn panic_fmt(_info: &PanicInfo) -> ! {
-    write!(Writer::new(), "System PANIC!")
+    vga::error();
+    write!(Writer::new(), " System PANIC!\n")
         .expect("Unexpected error in writing panic information!()");
+    vga::error();
     write!(Writer::new(), "{}", _info);
 
     loop{}
@@ -61,6 +63,13 @@ pub extern fn kernel_main(mb_info_ptr: usize) -> ! {
 
     vga::clear_term();
 
+    vga::print("                     _   _                _        _   
+      _ __ _   _ ___| |_| |__  _   _  ___| | _____| |_ 
+     | '__| | | / __| __| '_ \\| | | |/ __| |/ / _ \\ __|
+     | |  | |_| \\__ \\ |_| |_) | |_| | (__|   <  __/ |_ 
+     |_|   \\__,_|___/\\__|_.__/ \\__,_|\\___|_|\\_\\___|\\__|\n\n", 0x06);
+                                                   
+
     vga::print("Welcome to the ", 0x07);
     vga::print("rustbucket", 0x06);
     vga::println(" kernel!\nStarting boot procedure...\n");
@@ -81,7 +90,9 @@ pub extern fn kernel_main(mb_info_ptr: usize) -> ! {
     vga::okay();
     vga::println("Enabled interrupts\n");
 
-    interrupt();
+    vga::print_char('_', 0x100);
+
+    //interrupt();
 
     loop {}
 
