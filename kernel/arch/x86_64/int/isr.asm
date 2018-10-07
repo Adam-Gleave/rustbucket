@@ -10,7 +10,10 @@ global isr_default_err
 
 ;exceptions
 global divide_by_zero_wrapper
+global debug_wrapper
 global breakpoint_wrapper
+global overflow_wrapper
+global bounds_wrapper
 global opcode_wrapper
 global double_fault_wrapper
 global gpf_wrapper
@@ -116,6 +119,45 @@ bits 64
 
     extern breakpoint_handler
     call breakpoint_handler
+
+    add rsp, 8
+    POP_ALL
+    iretq
+  
+  align 4
+  debug_wrapper:
+    mov rdi, rsp
+    sub rsp, 8
+    PUSH_ALL
+
+    extern debug_handler
+    call debug_handler
+
+    add rsp, 8
+    POP_ALL
+    iretq
+
+  align 4
+  overflow_wrapper:
+    mov rdi, rsp
+    sub rsp, 8
+    PUSH_A
+
+    extern overflow_handler
+    call overflow_handler
+
+    add rsp, 8
+    POP_ALL
+    iretq
+
+  align 4
+  bounds_wrapper:
+    mov rdi, rsp
+    sub rsp, 8
+    PUSH_ALL
+
+    extern bounds_handler
+    call bounds_handler
 
     add rsp, 8
     POP_ALL

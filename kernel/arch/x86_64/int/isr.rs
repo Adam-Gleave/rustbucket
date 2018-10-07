@@ -1,6 +1,11 @@
 //isr.rs
 //defines methods for interrupts
 
+//***************************************//
+// Exception list at:                    //
+// https://wiki.osdev.org/Exceptions     //
+//***************************************//
+
 use arch::dev::pic;
 use arch::dev::pit;
 use driver::vga::Writer;
@@ -45,7 +50,7 @@ pub extern fn isr_default_err_handler(frame: &InterruptFrame) -> ! {
 	write!(Writer::new(), "EXCEPTION: UNHANDLED EXCEPTION at instruction {:X}\n{:#?}\n\n",
 		frame.instruction_pointer, frame).expect("Unexpected failure in write!()");
 
-	loop {}
+    loop {}
 }
 
 // Vector 0
@@ -59,12 +64,39 @@ pub extern fn divide_by_zero_handler(frame: &InterruptFrame) -> ! {
     loop {}
 }
 
+// Vector 1
+#[no_mangle]
+#[linkage = "external"]
+pub extern fn debug_handler(frame: &InterruptFrame) {
+    let frame = &*frame;
+    write!(Writer::new(), "EXCEPTION: DEBUG at instruction {:#X}\n{:#?}\n\n",
+        frame.instruction_pointer, frame).expect("Unexpected failure in write!()");
+}
+
 // Vector 3
 #[no_mangle]
 #[linkage = "external"]
 pub extern fn breakpoint_handler(frame: &InterruptFrame) {
     let frame = &*frame;
     write!(Writer::new(), "EXCEPTION: BREAK POINT at instruction {:#X}\n{:#?}\n\n",
+        frame.instruction_pointer, frame).expect("Unexpected failure in write!()");
+}
+
+// Vector 4
+#[no_mangle]
+#[linkage = "external"]
+pub extern fn overflow_handler(frame: &InterruptFrame) {
+    let frame = &*frame;
+    write!(Writer::new(), "EXCEPTION: OVERFLOW at instruction {:#X}\n{:#?}\n\n",
+        frame.instruction_pointer, frame).expect("Unexpected failure in write!()");
+}
+
+// Vector 5
+#[no_mangle]
+#[linkage = "external"]
+pub extern fn bounds_handler(frame: &InterruptFrame) {
+    let frame = &*frame;
+    write!(Writer::new(), "EXCEPTION: OUT-OF-BOUNDS at instruction {:#X}\n{:#?}\n\n",
         frame.instruction_pointer, frame).expect("Unexpected failure in write!()");
 }
 
