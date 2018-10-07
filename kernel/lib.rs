@@ -38,12 +38,11 @@ extern fn eh_personality() {}
 #[panic_handler]
 #[no_mangle]
 pub extern fn panic_fmt(_info: &PanicInfo) -> ! {
-	write!(Writer::new(), "System PANIC!")
-		.expect("Unexpected error in write!()");
-	//write!(Writer::new(), "\t{}", fmt)
-	//	.expect("Unexpected error in write!()");
+        write!(Writer::new(), "System PANIC!")
+	    .expect("Unexpected error in writing panic information!()");
+        write!(Writer::new(), "{}", _info);
 
-    loop{}
+        loop{}
 }
 
 #[no_mangle]
@@ -79,6 +78,8 @@ pub extern fn kernel_main(mb_info_ptr: usize) -> ! {
 	int::enable();
 	vga::println("Enabled interrupts.\n");
 
+        interrupt();
+
 	loop {}
 
 	// TODO
@@ -92,6 +93,14 @@ pub extern fn kernel_main(mb_info_ptr: usize) -> ! {
 	// Create dynamic memory allocator
 	// Create a mini kernel-space command-line
 	// Begin writing filesystem implementation (filesystems, inodes, file descriptors, etc.)
+}
+
+#[naked]
+#[inline(always)]
+pub fn interrupt() {
+    unsafe {
+        asm!("int3");
+    }
 }
 
 #[naked]
