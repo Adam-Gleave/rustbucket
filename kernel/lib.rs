@@ -24,6 +24,7 @@ use core::intrinsics;
 use core::panic::PanicInfo;
 use driver::vga;
 use driver::vga::Writer;
+use driver::com;
 use core::fmt::Write;
 use arch::dev::pic_init;
 use arch::dev::pit_init;
@@ -90,7 +91,7 @@ pub extern fn kernel_main(mb_info_ptr: usize) -> ! {
     vga::okay();
     vga::println("Enabled interrupts\n");
 
-    vga::print_char('_', 0x100);
+    com::init();
 
     //interrupt();
 

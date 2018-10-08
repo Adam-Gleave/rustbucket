@@ -3,7 +3,6 @@
 //eg. print_char, print_line, terminal_clear etc
 
 use core::fmt;
-use core::fmt::Write;
 
 static mut VGA_COL: u32 = 0;
 static mut VGA_ROW: i32 = 0;
