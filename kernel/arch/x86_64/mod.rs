@@ -24,6 +24,7 @@ extern "C" {
     // Interrupts
     fn pit_wrapper();
     fn keyboard_wrapper();
+    fn com1_wrapper();
     fn isr_spurious();
 }
 
@@ -83,6 +84,7 @@ lazy_static! {
         // Interrupts
         idt.set_handler(32, pit_wrapper as u64);
         idt.set_handler(33, keyboard_wrapper as u64);
+        idt.set_handler(36, com1_wrapper as u64);
         idt.set_handler(39, isr_spurious as u64);
 
         idt

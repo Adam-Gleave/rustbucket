@@ -11,7 +11,12 @@ use arch::dev::pit;
 use driver::vga::Writer;
 use driver::vga::print_char;
 use driver::kbd::get_char;
+use driver::com;
 use core::fmt::Write;
+
+const PIT_OFFSET: u8 = 1;
+const KBD_OFFSET: u8 = 2;
+const COM1_OFFSET: u8 = 4;
 
 #[derive(Debug)]
 #[repr(C)]
@@ -188,8 +193,6 @@ pub extern fn x87_float_handler(frame: &InterruptFrame) -> ! {
 #[no_mangle]
 #[linkage = "external"]
 pub extern fn pit_handler() {
-	pic::ack(1);
-    
     unsafe {
         pit::TICKS += 1;
 
@@ -197,13 +200,14 @@ pub extern fn pit_handler() {
             pit::TICKS = 0;
         }
     }
+    
+    pic::ack(PIT_OFFSET);
 }
 
 // Vector 33
 #[no_mangle]
 #[linkage = "external"]
 pub extern fn keyboard_handler() {
-    pic::ack(1);
     let c = get_char();
 
     match c {
@@ -211,4 +215,15 @@ pub extern fn keyboard_handler() {
         // Do nothing if NONE returned
         None => {}
     }
+    
+    pic::ack(KBD_OFFSET);
 }
+
+// Vector 36
+#[no_mangle]
+#[linkage = "external"]
+pub extern fn com1_handler() {
+    write!(Writer::new(), "COM1 INPUT RECEIVED: {}", com::read() as char);
+    pic::ack(COM1_OFFSET);
+}
+

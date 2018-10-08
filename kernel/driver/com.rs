@@ -29,7 +29,7 @@ pub fn init() {
     }
 
     vga::okay();
-    vga::println("COM1 serial port initialised.");
+    vga::println("COM1 serial port initialised");
 }
 
 pub fn read() -> u8 {

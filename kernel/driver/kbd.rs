@@ -15,7 +15,7 @@ static mut MODIFIERS: [bool; 3] = [false, false, false];
 
 // Scancode set 1 (my keyboard uses this)
 pub fn get_char() -> Option<char> {
-	let code = unsafe { port_io::inb(PS2) };
+    let code = unsafe { port_io::inb(PS2) };
     set_mods(code);
 
     code_to_char(code)

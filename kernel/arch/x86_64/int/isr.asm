@@ -24,6 +24,7 @@ global page_fault_wrapper
 ;interrupts
 global pit_wrapper
 global keyboard_wrapper
+global com1_wrapper
 global isr_spurious
 
 section .text
@@ -265,3 +266,14 @@ bits 64
 
     POP_ALL
     iretq
+
+  align 4
+  com1_wrapper:
+    PUSH_ALL
+
+    extern com1_handler
+    call com1_handler
+
+    POP_ALL
+    iretq
+
