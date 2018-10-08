@@ -32,3 +32,21 @@ pub fn init() {
     vga::println("COM1 serial port initialised.");
 }
 
+pub fn read() -> u8 {
+    unsafe {
+        while port_io::inb(COM1 + 5) & 0x01 == 0 {}
+        port_io::inb(COM1)
+    }
+}
+
+pub fn write(byte: u8) {
+    unsafe {
+        while port_io::inb(COM1 + 5) &0x20 == 0 {}
+        port_io::outb(COM1, byte);
+    }
+}
+
+pub fn write_char(c: char) {
+    write(c as u8);
+}
+
