@@ -16,19 +16,20 @@ pub const DATA_2: u16 = 0x42;
 pub const MAX_RATE: u32 = 1193180;
 
 pub fn set_phase(hz: u32) {
-	let divisor = MAX_RATE / hz;
+    let divisor = MAX_RATE / hz;
 
-	unsafe {
-		RATE = hz;
+    unsafe {
+        RATE = hz;
 
-		port_io::outb(CMD, (3 << 1) | (3 << 4)); //channel 0, least + most significant byte
-		port_io::outb(DATA_0, (divisor & 0xFF) as u8); //low
-		port_io::outb(DATA_0, (divisor >> 8) as u8); //high
-	}
+        port_io::outb(CMD, (3 << 1) | (3 << 4)); //channel 0, least + most significant byte
+        port_io::outb(DATA_0, (divisor & 0xFF) as u8); //low
+        port_io::outb(DATA_0, (divisor >> 8) as u8); //high
+    }
 }
 
 pub fn timer_wait(ms: u32) {
-	unsafe {
-		while TICKS < ms {}
-	}
+    unsafe {
+        while TICKS < ms {}
+        TICKS = 0;
+    }
 }

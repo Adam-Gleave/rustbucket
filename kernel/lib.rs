@@ -98,7 +98,13 @@ pub extern fn kernel_main(mb_info_ptr: usize) -> ! {
     vga::println(" Sending test serial string...\n");
     com::write_str("\nHello from serial!\n");
 
-    pit::timer_wait(2000);
+    vga::info();
+    vga::print("Exiting QEMU in ", 0x07);
+    
+    for i in (1..4).rev() {
+        write!(Writer::new(), "{}...", i);
+        pit::timer_wait(1000);
+    }
 
     qemu::shutdown();
 

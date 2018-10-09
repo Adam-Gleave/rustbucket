@@ -15,7 +15,7 @@ assembly_int_files := $(wildcard kernel/arch/$(arch)/int/*.asm)
 assembly_int_o_files := $(patsubst kernel/arch/$(arch)/int/%.asm, \
   build/arch/$(arch)/int/%.o, $(assembly_int_files))
 
-.PHONY: all clean run run-log run-test iso kernel
+.PHONY: all clean run run-log run-test run-test-hidden iso kernel
 
 all: $(kernel) $(iso)
 
@@ -29,8 +29,15 @@ run-log: $(iso)
 	qemu-system-x86_64 -cdrom $(iso) -serial mon:stdio
 
 run-test: $(iso)
-	qemu-system-x86_64 -cdrom $(iso) -serial mon:stdio \
+	qemu-system-x86_64 -cdrom $(iso) \
+	-serial mon:stdio \
+	-device isa-debug-exit,iobase=0xf4,iosize=0x04 \
+
+run-test-hidden: $(iso)
+	qemu-system-x86_64 -cdrom $(iso) \
+	-serial mon:stdio \
 	-device isa-debug-exit,iobase=0xf4,iosize=0x04
+	-display none
 
 iso: $(iso)
 
