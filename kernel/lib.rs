@@ -19,6 +19,7 @@ extern crate multiboot2;
 
 mod driver;
 mod arch;
+mod utils;
 
 use core::intrinsics;
 use core::panic::PanicInfo;
@@ -28,9 +29,11 @@ use driver::com;
 use core::fmt::Write;
 use arch::dev::pic_init;
 use arch::dev::pit_init;
+use arch::dev::pit;
 use arch::x86_64::gdt_init;
 use arch::x86_64::idt_init;
 use arch::x86_64::int::int;
+use utils::qemu;
 
 // called on system panic -- not implemented yet
 #[lang = "eh_personality"]
@@ -86,12 +89,18 @@ pub extern fn kernel_main(mb_info_ptr: usize) -> ! {
     pic_init();
     pit_init(1000);
 
-    // Enable interrupts
     int::enable();
     vga::okay();
     vga::println("Enabled interrupts\n");
 
     com::init();
+    vga::info();
+    vga::println(" Sending test serial string...\n");
+    com::write_str("\nHello from serial!\n");
+
+    pit::timer_wait(2000);
+
+    qemu::shutdown();
 
     //interrupt();
 

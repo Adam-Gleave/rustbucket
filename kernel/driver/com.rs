@@ -50,3 +50,9 @@ pub fn write_char(c: char) {
     write(c as u8);
 }
 
+pub fn write_str(str: &str) {
+    for c in str.chars() {
+        write_char(c);
+    }
+}
+
