@@ -33,5 +33,21 @@ impl Entry {
     pub fn flags(&self) -> EntryFlags {
         EntryFlags::from_bits_truncate(self.0)
     }
+
+    // Get address from page in entry, if present
+    pub fn pointed_frame(&self) -> Option<PageFrame> {
+        if self.flags().contains(EntryFlags::PRESENT) {
+            Some(PageFrame::at(self.0 as usize & 0x000fffff_fffff000))
+        }
+        else {
+            None
+        }
+    }
+
+    // Set entry to aligned page
+    pub fn set(&mut self, frame: PageFrame, flags: EntryFlags) {
+        assert!(frame.start() & !0x000fffff_fffff000 == 0);
+        self.0 = frame.start() as u64 | flags.bits();
+    }
 }
 

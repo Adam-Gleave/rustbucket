@@ -23,6 +23,11 @@ start:
   call set_up_paging
   call set_paging
 
+  ; recursive map p4 page table
+  mov eax, p4_table
+  or eax, 0b11
+  mov [p4_table + 511 * 8], eax
+
   ; load gdt
   lgdt [gdt64.pointer]
   jmp gdt64.code:long_mode_start
