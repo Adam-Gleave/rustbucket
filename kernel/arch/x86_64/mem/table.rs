@@ -2,7 +2,7 @@
 //contains methods and implementation for page tables
 
 use core::ops::{ Index, IndexMut }
-use arch::x86_64::paging::{ entry::*, frame };
+use arch::x86_64::mem::{ entry::*, frame };
 
 const ENTRIES: usize = 512;
 

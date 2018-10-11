@@ -16,6 +16,7 @@
 #[macro_use]
 extern crate lazy_static;
 extern crate multiboot2;
+extern crate bitflags;
 
 mod driver;
 mod arch;
@@ -95,7 +96,7 @@ pub extern fn kernel_main(mb_info_ptr: usize) -> ! {
 
     com::init();
     vga::info();
-    vga::println(" Sending test serial string...\n");
+    vga::println("Sending test serial string...\n");
     com::write_str("\nHello from serial!\n");
 
     vga::info();

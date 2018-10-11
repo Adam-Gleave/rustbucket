@@ -2,6 +2,7 @@
 pub mod idt;
 pub mod int;
 pub mod gdt;
+pub mod mem;
 
 extern "C" {
     // Default handlers
