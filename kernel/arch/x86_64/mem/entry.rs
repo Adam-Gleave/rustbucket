@@ -37,7 +37,7 @@ impl Entry {
     // Get address from page in entry, if present
     pub fn pointed_frame(&self) -> Option<PageFrame> {
         if self.flags().contains(EntryFlags::PRESENT) {
-            Some(PageFrame::at(self.0 as usize & 0x000fffff_fffff000))
+            Some(PageFrame::containing_address(self.0 as usize & 0x000fffff_fffff000))
         }
         else {
             None
